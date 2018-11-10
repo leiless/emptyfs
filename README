@@ -1,0 +1,9 @@
+macOS VFS kernel extension for emptyfs
+
+Build:
+make
+
+make dbg # Debug build
+
+TODO
+
