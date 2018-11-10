@@ -7,11 +7,13 @@
 
 kern_return_t emptyfs_start(kmod_info_t *ki __unused, void *d __unused)
 {
-    return KERN_FAILURE;
+
+    return KERN_SUCCESS;
 }
 
 kern_return_t emptyfs_stop(kmod_info_t *ki __unused, void *d __unused)
 {
+
     return KERN_SUCCESS;
 }
 
