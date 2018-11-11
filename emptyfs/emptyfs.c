@@ -1,14 +1,34 @@
-/**
- * Created 181110
+/*
+ * Created 181110  lynnl
  */
 
 #include <mach/mach_types.h>
 #include <libkern/libkern.h>
+#include <libkern/locks.h>
 
-kern_return_t emptyfs_start(kmod_info_t *ki __unused, void *d __unused)
+#include "emptyfs.h"
+#include "utils.h"
+
+static lck_grp_t *lckgrp = NULL;
+
+kern_return_t emptyfs_start(kmod_info_t *ki, void *d __unused)
 {
+    kern_return_t e = KERN_SUCCESS;
 
+    char *uuid = util_vma_uuid(ki->address);
+    LOG("uuid: %s", uuid);
+    util_mfree(uuid);
+
+    lckgrp = lck_grp_alloc_init(LCKGRP_NAME, LCK_GRP_ATTR_NULL);
+    if (lckgrp == NULL) goto out_lckgrp;
+    LOG_DBG("lock group(%s) allocated", LCKGRP_NAME);
+
+out_exit:
     return KERN_SUCCESS;
+
+out_lckgrp:
+    e = KERN_FAILURE;
+    goto out_exit;
 }
 
 kern_return_t emptyfs_stop(kmod_info_t *ki __unused, void *d __unused)
