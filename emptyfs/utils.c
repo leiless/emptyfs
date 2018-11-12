@@ -128,11 +128,10 @@ static int kcb(int opt)
         rd = OSDecrementAtomic(&i);
         kassert(rd > 0);
         /*
-         * wakeup_one() for each put kcb might heavy
-         *  instead  one can specify a fixed timeout for msleep() to spin
-         *  since invalidate-operation run only once
+         * wakeup_one() only from the last activated thread
+         *  it'll downgrade to flat wakeups if threads executed serial
          */
-        wakeup_one((caddr_t) &i);
+        if (rd == 1) wakeup_one((caddr_t) &i);
         return rd;
 
     case 2:
@@ -168,6 +167,7 @@ int util_put_kcb(void)
 
 /**
  * Invalidate further kcb operations(should call only once)
+ * @return      always return -1
  */
 int util_invalidate_kcb(void)
 {
