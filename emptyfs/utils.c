@@ -112,9 +112,13 @@ void util_massert(void)
     util_mstat(2);
 }
 
+/*
+ * kcb stands for kernel callbacks  a global refcnt used in kext
+ */
 static int kcb(int opt)
 {
     static volatile SInt i = 0;
+    static struct timespec ts = {0, 1e+6};  /* 100ms */
     SInt rd;
 
     switch (opt) {
@@ -127,21 +131,16 @@ static int kcb(int opt)
     case 1:
         rd = OSDecrementAtomic(&i);
         kassert(rd > 0);
-        /*
-         * wakeup_one() only from the last activated thread
-         *  it'll downgrade to flat wakeups if threads executed serial
-         */
-        if (rd == 1) wakeup_one((caddr_t) &i);
         return rd;
 
     case 2:
         do {
-            while (i > 0) msleep((void *) &i, NULL, PWAIT, NULL, NULL);
+            while (i > 0) msleep((void *) &i, NULL, PWAIT, NULL, &ts);
         } while (!OSCompareAndSwap(0, (UInt32) -1, &i));
         break;
 
     default:
-        panicf("Invalid option  opt: %d", i);
+        panicf("invalid option  opt: %d", i);
     }
 
     return i;
