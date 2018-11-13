@@ -16,12 +16,15 @@ kern_return_t emptyfs_start(kmod_info_t *ki, void *d __unused)
     kern_return_t e = KERN_SUCCESS;
 
     char *uuid = util_vma_uuid(ki->address);
-    LOG("uuid: %s", uuid);
+    LOG("kext executable uuid %s", uuid);
     util_mfree(uuid);
 
     lckgrp = lck_grp_alloc_init(LCKGRP_NAME, LCK_GRP_ATTR_NULL);
     if (lckgrp == NULL) goto out_lckgrp;
     LOG_DBG("lock group(%s) allocated", LCKGRP_NAME);
+
+    LOG("loaded %s version %s build %s (%s %s)",
+        BUNDLEID_S, KEXTVERSION_S, KEXTBUILD_S, __TIMESTAMP__, __TZ__);
 
 out_exit:
     return KERN_SUCCESS;
