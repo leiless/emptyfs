@@ -80,6 +80,7 @@
 #define LOG(fmt, ...)        printf(KEXTNAME_S ": " fmt "\n", ##__VA_ARGS__)
 
 #define LOG_INF(fmt, ...)    LOG("[INF] " fmt, ##__VA_ARGS__)
+#define LOG_WAR(fmt, ...)    LOG("[WAR] " fmt, ##__VA_ARGS__)
 #define LOG_ERR(fmt, ...)    LOG("[ERR] " fmt, ##__VA_ARGS__)
 #define LOG_BUG(fmt, ...)    LOG("[BUG] " fmt, ##__VA_ARGS__)
 #define LOG_OFF(fmt, ...)    (void) ((void) 0, ##__VA_ARGS__)
@@ -98,7 +99,7 @@ int util_get_kcb(void);
 int util_put_kcb(void);
 int util_read_kcb(void);
 
-char *util_vma_uuid(vm_address_t);
+char *util_vma_uuid(const vm_address_t);
 
 /**
  * kern_os_* family provides zero-out memory allocation

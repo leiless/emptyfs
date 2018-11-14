@@ -173,6 +173,8 @@ int util_invalidate_kcb(void)
     return kcb(2);
 }
 
+#define UUID_STR_BUFSZ    37  /* EOS included */
+
 /**
  * Extract UUID load command from a Mach-O address
  *
@@ -180,43 +182,38 @@ int util_invalidate_kcb(void)
  * @return  NULL if failed  o.w. a new allocated buffer
  *          You need to free the buffer explicitly by util_mfree
  */
-char *util_vma_uuid(vm_address_t addr)
+char *util_vma_uuid(const vm_address_t addr)
 {
     char *s = NULL;
     uint8_t *p = (void *) addr;
     struct mach_header *h = (struct mach_header *) p;
-    struct load_command lc;
-    uint32_t m;
+    struct load_command *lc;
     uint32_t i;
-    uint8_t u[16];
+    uint8_t *u;
 
     kassert_notnull(addr);
 
-    memcpy(&m, p, sizeof(m));
-    if (m == MH_MAGIC || m == MH_CIGAM) {
+    if (h->magic == MH_MAGIC || h->magic == MH_CIGAM) {
         p += sizeof(struct mach_header);
-    } else if (m == MH_MAGIC_64 || m == MH_CIGAM_64) {
+    } else if (h->magic == MH_MAGIC_64 || h->magic == MH_CIGAM_64) {
         p += sizeof(struct mach_header_64);
     } else {
         goto out_bad;
     }
 
-    for (i = 0; i < h->ncmds; i++) {
-        memcpy(&lc, p, sizeof(lc));
+    for (i = 0; i < h->ncmds; i++, p += lc->cmdsize) {
+        lc = (struct load_command *) p;
+        if (lc->cmd == LC_UUID) {
+            u = p + sizeof(*lc);
+            s = util_malloc(UUID_STR_BUFSZ, M_NOWAIT);
+            if (unlikely(s == NULL)) goto out_bad;
 
-        if (lc.cmd == LC_UUID) {
-            memcpy(u, p + sizeof(lc), sizeof(u));
-            s = util_malloc(37, M_NOWAIT);
-            if (s == NULL) goto out_bad;
-
-            (void) snprintf(s, 37,
+            (void) snprintf(s, UUID_STR_BUFSZ,
                     "%02x%02x%02x%02x-%02x%02x-%02x%02x-"
                     "%02x%02x-%02x%02x%02x%02x%02x%02x",
                     u[0], u[1], u[2], u[3], u[4], u[5], u[6], u[7],
                     u[8], u[9], u[10], u[11], u[12], u[13], u[14], u[15]);
             break;
-        } else {
-            p += lc.cmdsize;
         }
     }
 
