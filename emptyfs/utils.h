@@ -20,16 +20,23 @@
  */
 #define UNUSED(arg0, ...)   (void) ((void) arg0, ##__VA_ARGS__)
 
-/* G for GCC-specific */
+#define ARRAY_SIZE(x)       (sizeof(x) / sizeof(*(x)))
+
+/*
+ * G for GCC-specific
+ * see:
+ *  <sys/param.h>#MIN, MAX
+ *  <libkern/libkern.h>#min, max
+ */
 #define GMIN(a, b) ({       \
-    typeof (a) _a = (a);    \
-    typeof (b) _b = (b);    \
+    typeof(a) _a = (a);     \
+    typeof(b) _b = (b);     \
     _a < _b ? _a : _b;      \
 })
 
 #define GMAX(a, b) ({       \
-    typeof (a) _a = (a);    \
-    typeof (b) _b = (b);    \
+    typeof(a) _a = (a);     \
+    typeof(b) _b = (b);     \
     _a > _b ? _a : _b;      \
 })
 
