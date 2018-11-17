@@ -23,6 +23,11 @@
 #define ARRAY_SIZE(x)       (sizeof(x) / sizeof(*(x)))
 
 /*
+ * literal-aware alias of extern modifier
+ */
+#define readonly_extern     extern
+
+/*
  * G for GCC-specific
  * see:
  *  <sys/param.h>#MIN, MAX
@@ -117,3 +122,4 @@ extern void kern_os_free(void *);
 extern void *kern_os_realloc(void *, size_t);
 
 #endif /* __EMPTYFS_UTILS_H */
+
