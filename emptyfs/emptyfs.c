@@ -98,8 +98,25 @@ out_lckgrp:
 
 kern_return_t emptyfs_stop(kmod_info_t *ki __unused, void *d __unused)
 {
-    /* TODO */
-    return KERN_SUCCESS;
+    kern_return_t e;
+
+    e = vfs_fsremove(emptyfs_vfstbl_ref);
+    if (e) {
+        LOG_ERR("vfs_fsremove() failure  errno: %d", e);
+        goto out_vfs_rm;
+    }
+
+    lck_grp_free(lckgrp);
+
+    LOG("unloaded %s version %s build %s (%s %s)",
+        BUNDLEID_S, KEXTVERSION_S, KEXTBUILD_S, __TIMESTAMP__, __TZ__);
+
+out_exit:
+    return e;
+
+out_vfs_rm:
+    e = KERN_FAILURE;
+    goto out_exit;
 }
 
 #ifdef __kext_makefile__

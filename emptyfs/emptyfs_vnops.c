@@ -13,6 +13,19 @@ int (**emptyfs_vnop_p)(void *);
 
 #define VNOP_FUNC   int (*)(void *)
 
+static inline int emptyfs_vnop_default(struct vnop_generic_args *arg __unused)
+{
+    return ENOTSUP;
+}
+
+static int emptyfs_vnop_lookup(struct vnop_lookup_args *);
+static int emptyfs_vnop_open(struct vnop_open_args *);
+static int emptyfs_vnop_close(struct vnop_close_args *);
+static int emptyfs_vnop_getattr(struct vnop_getattr_args *);
+static int emptyfs_vnop_readdir(struct vnop_readdir_args *);
+static int emptyfs_vnop_reclaim(struct vnop_reclaim_args *);
+
+
 /*
  * describes all vnode operations supported by vnodes created by our VFS plugin
  */
@@ -78,14 +91,13 @@ static struct vnodeopv_entry_desc emptyfs_vnopv_entry_desc_list[] = {
     #endif
 #endif
 
-    /* TODO */
-    {&vnop_default_desc, NULL},
-    {&vnop_lookup_desc, NULL},
-    {&vnop_open_desc, NULL},
-    {&vnop_close_desc, NULL},
-    {&vnop_getattr_desc, NULL},
-    {&vnop_readlink_desc, NULL},
-    {&vnop_reclaim_desc, NULL},
+    {&vnop_default_desc, (VNOP_FUNC) emptyfs_vnop_default},
+    {&vnop_lookup_desc, (VNOP_FUNC) emptyfs_vnop_lookup},
+    {&vnop_open_desc, (VNOP_FUNC) emptyfs_vnop_open},
+    {&vnop_close_desc, (VNOP_FUNC) emptyfs_vnop_close},
+    {&vnop_getattr_desc, (VNOP_FUNC) emptyfs_vnop_getattr},
+    {&vnop_readdir_desc, (VNOP_FUNC) emptyfs_vnop_readdir},
+    {&vnop_reclaim_desc, (VNOP_FUNC) emptyfs_vnop_reclaim},
     {NULL, NULL},
 };
 
@@ -119,4 +131,41 @@ static struct vnodeopv_desc emptyfs_vnopv_desc = {
 struct vnodeopv_desc *emptyfs_vnopv_desc_list[__EMPTYFS_OPV_SZ] = {
     &emptyfs_vnopv_desc,
 };
+
+static int emptyfs_vnop_lookup(struct vnop_lookup_args *arg)
+{
+    UNUSED(arg);
+    /* TODO */
+    return 0;
+}
+
+static int emptyfs_vnop_open(struct vnop_open_args *arg)
+{
+    UNUSED(arg);
+    return 0;
+}
+
+static int emptyfs_vnop_close(struct vnop_close_args *arg)
+{
+    UNUSED(arg);
+    return 0;
+}
+
+static int emptyfs_vnop_getattr(struct vnop_getattr_args *arg)
+{
+    UNUSED(arg);
+    return 0;
+}
+
+static int emptyfs_vnop_readdir(struct vnop_readdir_args *arg)
+{
+    UNUSED(arg);
+    return 0;
+}
+
+static int emptyfs_vnop_reclaim(struct vnop_reclaim_args *arg)
+{
+    UNUSED(arg);
+    return 0;
+}
 

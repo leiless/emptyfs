@@ -4,6 +4,12 @@
 
 #include "emptyfs_vfsops.h"
 
+static int emptyfs_vfsop_mount(struct mount *, vnode_t, user_addr_t, vfs_context_t);
+static int emptyfs_vfsop_start(struct mount *, int, vfs_context_t);
+static int emptyfs_vfsop_unmount(struct mount *, int, vfs_context_t);
+static int emptyfs_vfsop_root(struct mount *, struct vnode **, vfs_context_t);
+static int emptyfs_vfsop_getattr(struct mount *, struct vfs_attr *, vfs_context_t);
+
 /*
  * a structure that stores function pointers to all VFS routines
  *  these functions operates on the instances of the file system itself
@@ -34,6 +40,57 @@ struct vfsops emptyfs_vfsops = {
     vfs_reserved1
 #endif
 
-    /* TODO */
+    .vfs_mount = emptyfs_vfsop_mount,
+    .vfs_start = emptyfs_vfsop_start,
+    .vfs_unmount = emptyfs_vfsop_unmount,
+    .vfs_root = emptyfs_vfsop_root,
+    .vfs_getattr = emptyfs_vfsop_getattr,
 };
+
+static int emptyfs_vfsop_mount(
+        struct mount *mp,
+        vnode_t devvp,
+        user_addr_t data,
+        vfs_context_t ctx)
+{
+    UNUSED(mp, devvp, data, ctx);
+    /* TODO */
+    return 0;
+}
+
+static int emptyfs_vfsop_start(
+        struct mount *mp,
+        int flags,
+        vfs_context_t ctx)
+{
+    UNUSED(mp, flags, ctx);
+    return 0;
+}
+
+static int emptyfs_vfsop_unmount(
+        struct mount *mp,
+        int flags,
+        vfs_context_t ctx)
+{
+    UNUSED(mp, flags, ctx);
+    return 0;
+}
+
+static int emptyfs_vfsop_root(
+        struct mount *mp,
+        struct vnode **vpp,
+        vfs_context_t ctx)
+{
+    UNUSED(mp, vpp, ctx);
+    return 0;
+}
+
+static int emptyfs_vfsop_getattr(
+        struct mount *mp,
+        struct vfs_attr *attr,
+        vfs_context_t ctx)
+{
+    UNUSED(mp, attr, ctx);
+    return 0;
+}
 
