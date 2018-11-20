@@ -100,6 +100,7 @@ kern_return_t emptyfs_stop(kmod_info_t *ki __unused, void *d __unused)
 {
     kern_return_t e;
 
+    /* will fail if any of our volumes(i.e. emptyfs) mounted */
     e = vfs_fsremove(emptyfs_vfstbl_ref);
     if (e) {
         LOG_ERR("vfs_fsremove() failure  errno: %d", e);
@@ -123,14 +124,14 @@ out_vfs_rm:
 extern kern_return_t _start(kmod_info_t *, void *);
 extern kern_return_t _stop(kmod_info_t *, void *);
 
-/* Will expand name if it's a macro */
+/* will expand name if it's a macro */
 #define KMOD_EXPLICIT_DECL2(name, ver, start, stop) \
     __attribute__((visibility("default")))          \
         KMOD_EXPLICIT_DECL(name, ver, start, stop)
 
 KMOD_EXPLICIT_DECL2(BUNDLEID, KEXTBUILD_S, _start, _stop)
 
-/* If you intended to write a kext library  NULLify _realmain and _antimain */
+/* if you intended to write a kext library  NULLify _realmain and _antimain */
 __private_extern__ kmod_start_func_t *_realmain = emptyfs_start;
 __private_extern__ kmod_stop_func_t *_antimain = emptyfs_stop;
 
