@@ -67,6 +67,8 @@ kern_return_t emptyfs_start(kmod_info_t *ki, void *d __unused)
 {
     kern_return_t e = KERN_SUCCESS;
 
+    LOG("built with Clang %s", __clang_version__);
+
     char *uuid = util_vma_uuid(ki->address);
     LOG("kext executable uuid %s", uuid);
     util_mfree(uuid);
