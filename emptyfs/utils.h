@@ -36,14 +36,14 @@
  *  <libkern/libkern.h>#min, max
  */
 #define GMIN(a, b) ({       \
-    typeof(a) _a = (a);     \
-    typeof(b) _b = (b);     \
+    __typeof(a) _a = (a);   \
+    __typeof(b) _b = (b);   \
     _a < _b ? _a : _b;      \
 })
 
 #define GMAX(a, b) ({       \
-    typeof(a) _a = (a);     \
-    typeof(b) _b = (b);     \
+    __typeof(a) _a = (a);   \
+    __typeof(b) _b = (b);   \
     _a > _b ? _a : _b;      \
 })
 

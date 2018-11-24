@@ -53,10 +53,10 @@ static void emptyfs_init_volattrs(struct emptyfs_mount * __nonnull mntp)
         | VOL_CAP_FMT_2TB_FILESIZE
         | VOL_CAP_FMT_NO_PERMISSIONS;
     /* XXX: forcibly mark all capabilities as valid? */
-    cap->valid[VOL_CAPABILITIES_FORMAT] = (typeof(*(cap->valid))) -1;
+    cap->valid[VOL_CAPABILITIES_FORMAT] = (__typeof(*(cap->valid))) -1;
 
     cap->capabilities[VOL_CAPABILITIES_INTERFACES] = VOL_CAP_INT_ATTRLIST;
-    cap->valid[VOL_CAPABILITIES_INTERFACES] = (typeof(*(cap->valid))) -1;
+    cap->valid[VOL_CAPABILITIES_INTERFACES] = (__typeof(*(cap->valid))) -1;
 
     attr->validattr.commonattr = 0
         | ATTR_CMN_NAME
