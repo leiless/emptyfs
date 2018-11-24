@@ -11,8 +11,7 @@
 
 readonly_extern struct vfsops emptyfs_vfsops;
 
-#define EMPTYFS_MNT_MAGIC       0x0fb9a962
-#define EMPTYFS_MNT_BAD_MAGIC   0x0fb9ac4a
+#define EMPTYFS_MNT_MAGIC       0x0fb9ac4a
 
 #define EMPTYFS_VL_MAXLEN       32
 
