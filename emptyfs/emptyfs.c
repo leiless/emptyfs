@@ -27,23 +27,6 @@
  *  passed as a parameter to vfs_fsadd to register this file system
  */
 static struct vfs_fsentry emptyfs_vfsentry = {
-#if 0
-    /* vfs operations */
-    struct vfsops *vfe_vfsops;
-    /* # of vnodeopv_desc being registered (reg, spec, fifo ...) */
-    int vfe_vopcnt;
-    /* null terminated */
-    struct vnodeopv_desc **vfe_opvdescs;
-    /* historic filesystem type number */
-    int vfe_fstypenum;
-    /* filesystem type name */
-    char vfe_fsname[MFSNAMELEN];
-    /* defines the FS capabilities */
-    uint32_t    vfe_flags;
-    /* reserved for future use; set this to zero */
-    void *vfe_reserv[2];
-#endif
-
     &emptyfs_vfsops,
     ARRAY_SIZE(emptyfs_vnopv_desc_list),
     emptyfs_vnopv_desc_list,
@@ -67,7 +50,7 @@ kern_return_t emptyfs_start(kmod_info_t *ki, void *d __unused)
 {
     kern_return_t e = KERN_SUCCESS;
 
-    LOG("built with Clang %s", __clang_version__);
+    LOG("built with clang %s", __clang_version__);
 
     char *uuid = util_vma_uuid(ki->address);
     LOG("kext executable uuid %s", uuid);

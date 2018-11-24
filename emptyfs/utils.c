@@ -191,7 +191,7 @@ char *util_vma_uuid(const vm_address_t addr)
     uint32_t i;
     uint8_t *u;
 
-    kassert_notnull(addr);
+    kassert_nonnull(addr);
 
     if (h->magic == MH_MAGIC || h->magic == MH_CIGAM) {
         p += sizeof(struct mach_header);
@@ -219,5 +219,14 @@ char *util_vma_uuid(const vm_address_t addr)
 
 out_bad:
     return s;
+}
+
+void format_uuid_string(const uuid_t u, uuid_string_t output)
+{
+    (void)
+    snprintf(output, UUID_STR_BUFSZ,
+        "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
+            u[0], u[1], u[2], u[3], u[4], u[5], u[6], u[7],
+            u[8], u[9], u[10], u[11], u[12], u[13], u[14], u[15]);
 }
 

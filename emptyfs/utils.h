@@ -9,6 +9,8 @@
 
 #include <sys/types.h>
 #include <mach/vm_types.h>
+#include <sys/malloc.h>
+#include <kern/debug.h>
 
 #ifndef __kext_makefile__
 #define KEXTNAME_S "emptyfs"
@@ -69,7 +71,7 @@
 #define kassertf(ex, fmt, ...)  (void) ((void) (ex), ##__VA_ARGS__)
 #endif
 
-#define kassert_notnull(ptr) kassert(((void *) ptr) != NULL)
+#define kassert_nonnull(ptr) kassert(((void *) ptr) != NULL)
 
 /**
  * Branch predictions
@@ -112,6 +114,8 @@ int util_put_kcb(void);
 int util_read_kcb(void);
 
 char *util_vma_uuid(const vm_address_t);
+
+void format_uuid_string(const uuid_t, uuid_string_t);
 
 /**
  * kern_os_* family provides zero-out memory allocation

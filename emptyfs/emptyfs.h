@@ -49,5 +49,32 @@
 
 readonly_extern lck_grp_t *lckgrp;
 
+/* The maximum 32-bit De Bruijn constant */
+#define EMPTYFS_MNTARG_MAGIC        0x0fb9ac52
+
+/*
+ * This structure is passed from userspace mount(2)
+ *  tells the kernel and our VFS plugin what and how to mount
+ *  part of the fields interpreted by the kernel(enclosed by KERNEL)
+ *  the rest is only interpreted by our VFS mount entry point
+ *
+ * XXX:
+ *  this structure should be invariant between 32/64-bits(except the KERNEL part)
+ *  o.w. a mount from a 64-bit process will fail when it try to mount
+ *  for this reason  you must use arch-independent data type
+ *  for example, long int may 32-bit or 64-bit(which it's arch-dependent)
+ *
+ * see: emptyfs_vfsops.c#emptyfs_vfsop_mount
+ */
+struct emptyfs_mnt_args {
+#ifdef KERNEL
+    /* path to the block device node to mount  example: /dev/disk0s1 */
+    const char *dev_node_path;
+#endif
+    uint32_t magic;         /* must be EMPTYFS_MNTARG_MAGIC */
+    uint32_t dbg_mode;      /* enable debug for verbose output */
+    uint32_t force_fail;    /* if non-zero  mount(2) will always fail */
+};
+
 #endif /* __EMPTYFS_H */
 
