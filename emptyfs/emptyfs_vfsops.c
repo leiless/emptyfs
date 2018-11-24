@@ -332,7 +332,7 @@ static int emptyfs_vfsop_unmount(
     struct emptyfs_mount *mntp;
 
     kassert_nonnull(mp);
-    /* TODO: assert_mnt_flag_sanity */
+    kassert_known_flags(flags, MNT_FORCE);
     kassert_nonnull(ctx);
 
     flush_flags = (flags & MNT_FORCE) ? FORCECLOSE : 0;

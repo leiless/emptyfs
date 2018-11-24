@@ -104,6 +104,26 @@
 #define LOG_DBG(fmt, ...)    LOG_OFF(fmt, ##__VA_ARGS__)
 #endif
 
+#ifdef DEBUG
+/**
+ * Assert over a known flags
+ * @param flags     the flags need to assert
+ * @param known     the known flags
+ * If met any unknown flags  it'll print a warning message instead of panic
+ */
+#define kassert_known_flags(flags, known) do {                              \
+    uint64_t __a = (flags);                                                 \
+    uint64_t __b = (known);                                                 \
+    uint64_t __c = __a & ~__b;                                              \
+    if (__c) {                                                              \
+        LOG_WAR("Met unknown flags %#llx  (%#llx vs %#llx)\n%s@%s#L%d",     \
+            __c, __a, __b, __BASE_FILE__, __FUNCTION__, __LINE__);          \
+    }                                                                       \
+} while (0)
+#else
+#define kassert_known_flags(flags, known) ((void) 0)
+#endif
+
 void *util_malloc(size_t, int);
 void *util_realloc(void *, size_t, size_t, int);
 void util_mfree(void *);
