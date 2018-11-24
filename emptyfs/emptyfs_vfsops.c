@@ -313,12 +313,37 @@ out_exit:
     return e;
 }
 
+/*
+ * Called by VFS to mark a mount as ready to be used
+ *
+ * after receiving this calldown
+ *  a filesystem will be hooked into the mount list
+ *  and should expect calls down from the VFS layer
+ *
+ * this entry point isn't particularly useful  to avoid concurrency problems
+ *  you should do all mount initialization in VFS mount entry point
+ * moreover  it's unnecessary to implement this :. in the VFS_START call
+ *  if you glue a NULL to vfs_start field  it returns ENOTSUP
+ *  and the caller ignores the result
+ *
+ * @mp      the mount structure reference
+ * @flags   unused
+ * @ctx     context to authenticate for mount
+ * @return  return value is ignored
+ *
+ * see:
+ *  xnu/bsd/vfs/kpi_vfs.c#VFS_START
+ *  xnu/bsd/vfs/vfs_subr.c#vfs_mountroot
+ *  xnu/bsd/vfs/vfs_syscalls.c#mount_common
+ */
 static int emptyfs_vfsop_start(
         struct mount *mp,
         int flags,
         vfs_context_t ctx)
 {
-    UNUSED(mp, flags, ctx);
+    kassert_nonnull(mp);
+    kassert_known_flags(flags, 0);
+    kassert_nonnull(ctx);
     return 0;
 }
 
