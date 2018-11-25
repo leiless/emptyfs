@@ -4,6 +4,7 @@
 
 #include <libkern/libkern.h>
 #include <sys/vnode.h>
+#include <sys/mount.h>
 #include <sys/kauth.h>
 
 #include "emptyfs_vfsops.h"
@@ -27,6 +28,20 @@ struct vfsops emptyfs_vfsops = {
     .vfs_root = emptyfs_vfsop_root,
     .vfs_getattr = emptyfs_vfsop_getattr,
 };
+
+/*
+ * Get filesystem-specific mount structure
+ */
+struct emptyfs_mount *emptyfs_mount_from_mount(mount_t __nonnull mp)
+{
+    struct emptyfs_mount *mntp;
+    kassert_nonnull(mp);
+    mntp = vfs_fsprivate(mp);
+    kassert_nonnull(mntp);
+    kassert(mntp->magic == EMPTYFS_MNT_MAGIC);
+    kassert(mntp->mp == mp);
+    return mntp;
+}
 
 #define VFS_ATTR_BLKSZ  4096
 
@@ -405,12 +420,76 @@ static int emptyfs_vfsop_root(
     return 0;
 }
 
+/*
+ * Called by VFS to get information about this file system
+ *
+ * @mp      the mount structure reference
+ * @attr    describe the attributes requested and the place to stores the result
+ * @ctx     context to authenticate for mount
+ * @return  0 :. always success
+ *
+ * this implementation is trivial :. our file system attributes are static
+ */
 static int emptyfs_vfsop_getattr(
         struct mount *mp,
         struct vfs_attr *attr,
         vfs_context_t ctx)
 {
-    UNUSED(mp, attr, ctx);
+    struct emptyfs_mount *mntp;
+
+    kassert_nonnull(mp);
+    kassert_nonnull(attr);
+    kassert_nonnull(ctx);
+
+    LOG_DBG("VFS getattr   f_active: %#llx f_supported: %#llx",
+                attr->f_active, attr->f_supported);
+
+    mntp = emptyfs_mount_from_mount(mp);
+
+    VFSATTR_RETURN(attr, f_objcount, mntp->attr.f_objcount);
+    VFSATTR_RETURN(attr, f_filecount, mntp->attr.f_filecount);
+    VFSATTR_RETURN(attr, f_dircount, mntp->attr.f_dircount);
+    VFSATTR_RETURN(attr, f_maxobjcount, mntp->attr.f_maxobjcount);
+
+    VFSATTR_RETURN(attr, f_bsize, mntp->attr.f_bsize);
+    VFSATTR_RETURN(attr, f_iosize, mntp->attr.f_iosize);
+    VFSATTR_RETURN(attr, f_blocks, mntp->attr.f_blocks);
+    VFSATTR_RETURN(attr, f_bfree, mntp->attr.f_bfree);
+    VFSATTR_RETURN(attr, f_bavail, mntp->attr.f_bavail);
+    VFSATTR_RETURN(attr, f_bused, mntp->attr.f_bused);
+    VFSATTR_RETURN(attr, f_files, mntp->attr.f_files);
+    VFSATTR_RETURN(attr, f_ffree, mntp->attr.f_ffree);
+    VFSATTR_RETURN(attr, f_fsid, mntp->attr.f_fsid);
+    VFSATTR_RETURN(attr, f_owner, mntp->attr.f_owner);
+
+    VFSATTR_RETURN(attr, f_capabilities, mntp->attr.f_capabilities);
+    VFSATTR_RETURN(attr, f_attributes, mntp->attr.f_attributes);
+
+    VFSATTR_RETURN(attr, f_create_time, mntp->attr.f_create_time);
+    VFSATTR_RETURN(attr, f_modify_time, mntp->attr.f_modify_time);
+    VFSATTR_RETURN(attr, f_access_time, mntp->attr.f_access_time);
+    /* no support f_backup_time */
+
+    VFSATTR_RETURN(attr, f_fssubtype, mntp->attr.f_fssubtype);
+
+    if (VFSATTR_IS_ACTIVE(attr, f_vol_name)) {
+        strncpy(attr->f_vol_name, mntp->attr.f_vol_name, EMPTYFS_VL_MAXLEN);
+        attr->f_vol_name[EMPTYFS_VL_MAXLEN-1] = '\0';
+        VFSATTR_SET_SUPPORTED(attr, f_vol_name);
+    }
+
+    /* no support f_signature */
+    /* no support f_carbon_fsid */
+
+    if (VFSATTR_IS_ACTIVE(attr, f_uuid)) {
+        kassert(sizeof(mntp->attr.f_uuid) == sizeof(attr->f_uuid));
+        bcopy(mntp->attr.f_uuid, attr->f_uuid, sizeof(attr->f_uuid));
+        VFSATTR_SET_SUPPORTED(attr, f_uuid);
+    }
+
+    /* no support f_quota */
+    /* no support f_reserved */
+
     return 0;
 }
 
