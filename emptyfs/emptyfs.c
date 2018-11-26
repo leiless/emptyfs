@@ -48,13 +48,14 @@ static vfstable_t emptyfs_vfstbl_ref = NULL;
 
 kern_return_t emptyfs_start(kmod_info_t *ki, void *d __unused)
 {
-    kern_return_t e = KERN_SUCCESS;
+    kern_return_t e;
+    uuid_string_t uuid;
 
     LOG("built with clang %s", __clang_version__);
 
-    char *uuid = util_vma_uuid(ki->address);
+    e = util_vma_uuid(ki->address, uuid);
+    kassert(e == 0);
     LOG("kext executable uuid %s", uuid);
-    util_mfree(uuid);
 
     lckgrp = lck_grp_alloc_init(LCKGRP_NAME, LCK_GRP_ATTR_NULL);
     if (lckgrp == NULL) goto out_lckgrp;

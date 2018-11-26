@@ -6,8 +6,10 @@
 #include <sys/vnode.h>
 #include <sys/mount.h>
 #include <sys/kauth.h>
+#include <sys/proc.h>
 
 #include "emptyfs_vfsops.h"
+#include "emptyfs_vnops.h"
 #include "emptyfs.h"
 
 static int emptyfs_vfsop_mount(struct mount *, vnode_t, user_addr_t, vfs_context_t);
@@ -411,13 +413,137 @@ out_exit:
     return e;
 }
 
+static int get_root_vnode(
+        struct emptyfs_mount * __nonnull mntp,
+        vnode_t * __nonnull vpp)
+{
+    int e;
+    int e2;
+    vnode_t vn = NULL;
+    uint32_t vid;
+    struct vnode_fsparam param;
+
+    kassert_nonnull(mntp);
+    kassert_nonnull(vpp);
+    kassert_null(*vpp);
+
+    lck_mtx_lock(mntp->mtx_root);
+
+    do {
+        kassert_null(vn);
+        lck_mtx_assert(mntp->mtx_root, LCK_MTX_ASSERT_OWNED);
+
+        if (mntp->is_root_attaching) {
+            mntp->is_root_waiting = 1;
+            (void) msleep(&mntp->rootvp, mntp->mtx_root, PINOD, NULL, NULL);
+            kassert(mntp->is_root_waiting == 0);
+            e = EAGAIN;
+        } else if (mntp->rootvp == NULLVP) {
+            mntp->is_root_attaching = 1;
+            lck_mtx_unlock(mntp->mtx_root);
+
+            param.vnfs_mp = mntp->mp;
+            param.vnfs_vtype = VDIR;
+            param.vnfs_str = NULL;
+            param.vnfs_dvp = NULL;
+            param.vnfs_fsnode = NULL;
+            param.vnfs_vops = emptyfs_vnop_p;
+            param.vnfs_markroot = 1;
+            param.vnfs_marksystem = 0;
+            param.vnfs_rdev = 0;        /* we don't support VBLK and VCHR */
+            param.vnfs_filesize = 0;    /* nonsense for VDIR */
+            param.vnfs_cnp = NULL;
+            param.vnfs_flags = VNFS_NOCACHE | VNFS_CANTCACHE;   /* no namecache */
+
+            e = vnode_create(VNCREATE_FLAVOR, sizeof(param), &param, &vn);
+            if (e == 0) {
+                kassert_nonnull(vn);
+                LOG_DBG("vnode_create() ok  vn: %p vid: %#x", vn, vnode_vid(vn));
+            } else {
+                kassert_null(vn);
+                LOG_ERR("vnode_create() fail  errno: %d", e);
+            }
+
+            lck_mtx_lock(mntp->mtx_root);
+            if (e == 0) {
+                kassert_null(mntp->rootvp);
+                mntp->rootvp = vn;
+                e2 = vnode_addfsref(vn);
+                kassertf(e2 == 0, "vnode_addfsref() fail  errno: %d", e2);
+
+                kassert(mntp->is_root_attaching);
+                mntp->is_root_attaching = 0;
+                if (mntp->is_root_waiting) {
+                    mntp->is_root_waiting = 0;      /* reset beforehand */
+                    wakeup(&mntp->rootvp);
+                }
+            }
+        } else {
+            /* we already have a root vnode  try get with vnode vid */
+
+            vn = mntp->rootvp;
+            kassert_nonnull(vn);
+            vid = vnode_vid(vn);
+            lck_mtx_unlock(mntp->mtx_root);
+
+            e = vnode_getwithvid(vn, vid);
+            if (e == 0) {
+                /*
+                 * ok  vnode_getwithvid() has taken an IO refcnt. to the vnode
+                 * this reference prevent from being reclaimed in the interim
+                 */
+            } else {
+                /*
+                 * the vnode has been relaimed  likely between dropping the lock
+                 *  and calling the vnode_getwithvid()
+                 * .: we loop again to get updated vnode root(hopefully)
+                 */
+                LOG_ERR("vnode_getwithvid() fail  errno: %d", e);
+                vn = NULL;                      /* loop invariant */
+                e = EAGAIN;
+            }
+
+            lck_mtx_lock(mntp->mtx_root);       /* loop invariant */
+        }
+    } while (e == EAGAIN);
+
+    lck_mtx_unlock(mntp->mtx_root);
+
+    if (e == 0) {
+        kassert_nonnull(vn);
+        *vpp = vn;
+    } else {
+        kassert_null(vn);
+    }
+
+    return e;
+}
+
 static int emptyfs_vfsop_root(
         struct mount *mp,
         struct vnode **vpp,
         vfs_context_t ctx)
 {
-    UNUSED(mp, vpp, ctx);
-    return 0;
+    int e;
+    vnode_t vn = NULL;
+    struct emptyfs_mount *mntp;
+
+    kassert_nonnull(mp);
+    kassert_nonnull(vpp);
+    kassert_nonnull(ctx);
+
+    mntp = emptyfs_mount_from_mount(mp);
+    e = get_root_vnode(mntp, &vn);
+    /* under all circumstances we should set *vpp to maintain post-conditions */
+    *vpp = vn;
+
+    if (e == 0) {
+        kassert_nonnull(*vpp);
+    } else {
+        kassert_null(*vpp);
+    }
+
+    return e;
 }
 
 /*

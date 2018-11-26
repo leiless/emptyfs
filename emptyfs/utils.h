@@ -71,7 +71,8 @@
 #define kassertf(ex, fmt, ...)  (void) ((void) (ex), ##__VA_ARGS__)
 #endif
 
-#define kassert_nonnull(ptr) kassert(((void *) ptr) != NULL)
+#define kassert_null(ptr)       kassert(((void *) ptr) == NULL)
+#define kassert_nonnull(ptr)    kassert(((void *) ptr) != NULL)
 
 /**
  * Branch predictions
@@ -133,7 +134,7 @@ int util_get_kcb(void);
 int util_put_kcb(void);
 int util_read_kcb(void);
 
-char *util_vma_uuid(const vm_address_t);
+int util_vma_uuid(const vm_address_t, uuid_string_t);
 
 void format_uuid_string(const uuid_t, uuid_string_t);
 

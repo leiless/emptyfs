@@ -179,14 +179,14 @@ int util_invalidate_kcb(void)
  * Extract UUID load command from a Mach-O address
  *
  * @addr    Mach-O starting address
- * @return  NULL if failed  o.w. a new allocated buffer
- *          You need to free the buffer explicitly by util_mfree
+ * @output  UUID string output
+ * @return  0 if success  errno o.w.
  */
-char *util_vma_uuid(const vm_address_t addr)
+int util_vma_uuid(const vm_address_t addr, uuid_string_t output)
 {
-    char *s = NULL;
+    int e = 0;
     uint8_t *p = (void *) addr;
-    struct mach_header *h = (struct mach_header *) p;
+    struct mach_header *h = (struct mach_header *) addr;
     struct load_command *lc;
     uint32_t i;
     uint8_t *u;
@@ -198,6 +198,7 @@ char *util_vma_uuid(const vm_address_t addr)
     } else if (h->magic == MH_MAGIC_64 || h->magic == MH_CIGAM_64) {
         p += sizeof(struct mach_header_64);
     } else {
+        e = EBADMACHO;
         goto out_bad;
     }
 
@@ -205,20 +206,19 @@ char *util_vma_uuid(const vm_address_t addr)
         lc = (struct load_command *) p;
         if (lc->cmd == LC_UUID) {
             u = p + sizeof(*lc);
-            s = util_malloc(UUID_STR_BUFSZ, M_NOWAIT);
-            if (unlikely(s == NULL)) goto out_bad;
 
-            (void) snprintf(s, UUID_STR_BUFSZ,
+            (void) snprintf(output, UUID_STR_BUFSZ,
                     "%02x%02x%02x%02x-%02x%02x-%02x%02x-"
                     "%02x%02x-%02x%02x%02x%02x%02x%02x",
                     u[0], u[1], u[2], u[3], u[4], u[5], u[6], u[7],
                     u[8], u[9], u[10], u[11], u[12], u[13], u[14], u[15]);
-            break;
+            goto out_bad;
         }
     }
 
+    e = ENOENT;
 out_bad:
-    return s;
+    return e;
 }
 
 void format_uuid_string(const uuid_t u, uuid_string_t output)
