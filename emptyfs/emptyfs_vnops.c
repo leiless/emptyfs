@@ -3,6 +3,7 @@
  */
 
 #include "emptyfs_vnops.h"
+#include "emptyfs_vfsops.h"
 
 /*
  * this variable will be set when we register VFS plugin via vfs_fsadd()
@@ -107,13 +108,6 @@ static struct vnodeopv_entry_desc emptyfs_vnopv_entry_desc_list[] = {
  *  when register VFS plugin on success with vfs_fsadd()
  */
 static struct vnodeopv_desc emptyfs_vnopv_desc = {
-#if 0
-    /* ptr to the ptr to the vector where op should go */
-    int (***opv_desc_vector_p)(void *);
-    /* null terminated list */
-    struct vnodeopv_entry_desc *opv_desc_ops;
-#endif
-
     &emptyfs_vnop_p,
     emptyfs_vnopv_entry_desc_list,
 };
@@ -132,11 +126,100 @@ struct vnodeopv_desc *emptyfs_vnopv_desc_list[__EMPTYFS_OPV_SZ] = {
     &emptyfs_vnopv_desc,
 };
 
-static int emptyfs_vnop_lookup(struct vnop_lookup_args *arg)
+/**
+ * Check if a given vnode is valid in our filesystem
+ *  in this fs  the only valid vnode is the root vnode
+ *  .: it's a trivial implementation
+ */
+static void assert_valid_vnode(vnode_t vn)
 {
-    UNUSED(arg);
-    /* TODO */
-    return 0;
+#ifdef DEBUG
+    int valid;
+    struct emptyfs_mount *mntp;
+
+    kassert_nonnull(vn);
+
+    mntp = emptyfs_mount_from_mp(vnode_mount(vn));
+
+    lck_mtx_lock(mntp->mtx_root);
+    valid = (vn == mntp->rootvp);
+    lck_mtx_unlock(mntp->mtx_root);
+
+    kassertf(valid, "invalid vnode %p  vid: %#x type: %d",
+                        vn, vnode_vid(vn), vnode_vtype(vn));
+#else
+    UNUSED(vn);
+#endif
+}
+
+/**
+ * Called by VFS to do a file lookup
+ * @desc    (unused) identity which vnode operation(lookup in such case)
+ * @dvp     the directory to search
+ * @vpp     pointer to a vnode where we return the found item
+ *          the resulting vnode must have an io refcnt.
+ *          and the caller is responsible to release it
+ * @cnp     describes the name to search for  more see its definition
+ * @ctx     identity of the calling process
+ * @return  0 if found  errno o.w.
+ */
+static int emptyfs_vnop_lookup(struct vnop_lookup_args *ap)
+{
+    int e;
+    struct vnodeop_desc *desc;
+    vnode_t dvp;
+    vnode_t *vpp;
+    struct componentname *cnp;
+    vfs_context_t ctx;
+    vnode_t vn = NULL;
+
+    kassert_nonnull(ap);
+    desc = ap->a_desc;
+    dvp = ap->a_dvp;
+    vpp = ap->a_vpp;
+    cnp = ap->a_cnp;
+    ctx = ap->a_context;
+    kassert_nonnull(desc);
+    kassert_nonnull(dvp);
+    kassertf(vnode_isdir(dvp), "vnop_lookup() dvp type: %d", vnode_vtype(dvp));
+    assert_valid_vnode(dvp);
+    kassert_nonnull(vpp);
+    kassert_nonnull(cnp);
+    kassert_nonnull(ctx);
+
+    if (cnp->cn_flags & ISDOTDOT) {
+        /*
+         * Implement lookup for ".."(i.e. parent directory)
+         * Currently this fs only has one vnode(i.e. the root vnode)
+         *  and parent of root vnode is always itself
+         *  it's equals to "." in such case
+         * The implementation is trivial
+         */
+        e = vnode_get(dvp);
+        if (e == 0) vn = dvp;
+    } else if (!strcmp(cnp->cn_nameptr, ".")) {
+        /* Ditto */
+        e = vnode_get(dvp);
+        if (e == 0) vn = dvp;
+    } else {
+        LOG_DBG("vnop_lookup() ENOENT  op: %#x flags: %#x name: %s pn: %s",
+            cnp->cn_nameiop, cnp->cn_flags, cnp->cn_nameptr, cnp->cn_pnbuf);
+        e = ENOENT;
+    }
+
+    /*
+     * under all circumstances we should update *vpp
+     *  .: we can maintain post-condition
+     */
+    *vpp = vn;
+
+    if (e == 0) {
+        kassert_nonnull(*vpp);
+    } else {
+        kassert_null(*vpp);
+    }
+
+    return e;
 }
 
 static int emptyfs_vnop_open(struct vnop_open_args *arg)

@@ -34,7 +34,7 @@ struct vfsops emptyfs_vfsops = {
 /*
  * Get filesystem-specific mount structure
  */
-struct emptyfs_mount *emptyfs_mount_from_mount(mount_t __nonnull mp)
+struct emptyfs_mount *emptyfs_mount_from_mp(mount_t __nonnull mp)
 {
     struct emptyfs_mount *mntp;
     kassert_nonnull(mp);
@@ -544,7 +544,7 @@ static int emptyfs_vfsop_root(
     kassert_nonnull(vpp);
     kassert_nonnull(ctx);
 
-    mntp = emptyfs_mount_from_mount(mp);
+    mntp = emptyfs_mount_from_mp(mp);
     e = get_root_vnode(mntp, &vn);
     /* under all circumstances we should set *vpp to maintain post-conditions */
     *vpp = vn;
@@ -582,7 +582,7 @@ static int emptyfs_vfsop_getattr(
     LOG_DBG("VFS getattr   f_active: %#llx f_supported: %#llx",
                 attr->f_active, attr->f_supported);
 
-    mntp = emptyfs_mount_from_mount(mp);
+    mntp = emptyfs_mount_from_mp(mp);
 
     VFSATTR_RETURN(attr, f_objcount, mntp->attr.f_objcount);
     VFSATTR_RETURN(attr, f_filecount, mntp->attr.f_filecount);

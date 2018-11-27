@@ -11,6 +11,7 @@
 #include <mach/vm_types.h>
 #include <sys/malloc.h>
 #include <kern/debug.h>
+#include <libkern/libkern.h>
 
 #ifndef __kext_makefile__
 #define KEXTNAME_S "emptyfs"

@@ -47,7 +47,7 @@ struct emptyfs_mount {
     vnode_t rootvp;
 };
 
-struct emptyfs_mount *emptyfs_mount_from_mount(mount_t);
+struct emptyfs_mount *emptyfs_mount_from_mp(mount_t);
 
 #endif /* __EMPTYFS_VFSOPS_H */
 
