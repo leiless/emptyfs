@@ -413,6 +413,11 @@ out_exit:
     return e;
 }
 
+/**
+ * @return      root vnode of the volume(will create if necessary)
+ *              resulting vnode has an io refcnt. whcih the caller is
+ *              responsible to release it via vnode_put()
+ */
 static int get_root_vnode(
         struct emptyfs_mount * __nonnull mntp,
         vnode_t * __nonnull vpp)
@@ -480,7 +485,6 @@ static int get_root_vnode(
             }
         } else {
             /* we already have a root vnode  try get with vnode vid */
-
             vn = mntp->rootvp;
             kassert_nonnull(vn);
             vid = vnode_vid(vn);
@@ -519,6 +523,14 @@ static int get_root_vnode(
     return e;
 }
 
+/**
+ * Called by VFS to get root vnode of this file system
+ * @mp      the mount structure reference
+ * @vpp     pointer to a vnode reference
+ *          on success we must update it and have an io refcnt on it
+ *          and it's the caller's responsibility to release it
+ * @ctx     context to authenticate for getting the root
+ */
 static int emptyfs_vfsop_root(
         struct mount *mp,
         struct vnode **vpp,
