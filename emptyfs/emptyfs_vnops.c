@@ -4,6 +4,7 @@
 
 #include "emptyfs_vnops.h"
 #include "emptyfs_vfsops.h"
+#include <sys/fcntl.h>
 
 /*
  * this variable will be set when we register VFS plugin via vfs_fsadd()
@@ -148,7 +149,7 @@ static void assert_valid_vnode(vnode_t vn)
     kassertf(valid, "invalid vnode %p  vid: %#x type: %d",
                         vn, vnode_vid(vn), vnode_vtype(vn));
 #else
-    UNUSED(vn);
+    kassert_nonnull(vn);
 #endif
 }
 
@@ -222,15 +223,70 @@ static int emptyfs_vnop_lookup(struct vnop_lookup_args *ap)
     return e;
 }
 
-static int emptyfs_vnop_open(struct vnop_open_args *arg)
+/**
+ * Called by VFS to open a vnode for access
+ * @vp      the vnode being opened
+ * @mode    open flags
+ * @ctx     identity of the calling process
+ * @return  always 0
+ *
+ * [sic]
+ * this entry is rarely useful :. VFS can read a file vnode without ever open it
+ * .: any work that you'd usually do here you have to do lazily in your
+ *  read/write entry points
+ */
+static int emptyfs_vnop_open(struct vnop_open_args *ap)
 {
-    UNUSED(arg);
+    struct vnodeop_desc *desc;
+    vnode_t vp;
+    int mode;
+    vfs_context_t ctx;
+
+    kassert_nonnull(ap);
+    desc = ap->a_desc;
+    vp = ap->a_vp;
+    mode = ap->a_mode;
+    ctx = ap->a_context;
+    kassert_nonnull(desc);
+    kassert_nonnull(vp);
+    kassert_known_flags(mode, O_EVTONLY | O_NONBLOCK | O_APPEND | FREAD | FWRITE);
+    kassert_nonnull(ctx);
+
+    assert_valid_vnode(vp);
+
     return 0;
 }
 
-static int emptyfs_vnop_close(struct vnop_close_args *arg)
+/**
+ * Caller by VFS to close a vnode for access
+ *
+ * [sic]
+ * this entry is not as useful as you might think :. a vnode can be accessed
+ *  after the last close(for example, it has been mmaped)
+ * in most cases  the work you might think do here
+ *  you end up doing in vnop_inactive
+ */
+static int emptyfs_vnop_close(struct vnop_close_args *ap)
 {
-    UNUSED(arg);
+    struct vnodeop_desc *desc;
+    vnode_t vp;
+    int fflag;
+    vfs_context_t ctx;
+
+    kassert_nonnull(ap);
+    desc = ap->a_desc;
+    vp = ap->a_vp;
+    fflag = ap->a_fflag;
+    ctx = ap->a_context;
+    kassert_nonnull(desc);
+    kassert_nonnull(vp);
+    kassert_known_flags(fflag, O_EVTONLY | O_NONBLOCK | O_APPEND | FREAD | FWRITE);
+    kassert_nonnull(ctx);
+
+    /* empty implementation */
+
+    assert_valid_vnode(vp);
+
     return 0;
 }
 
