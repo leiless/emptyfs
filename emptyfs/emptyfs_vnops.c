@@ -132,24 +132,24 @@ struct vnodeopv_desc *emptyfs_vnopv_desc_list[__EMPTYFS_OPV_SZ] = {
  *  in this fs  the only valid vnode is the root vnode
  *  .: it's a trivial implementation
  */
-static void assert_valid_vnode(vnode_t vn)
+static void assert_valid_vnode(vnode_t vp)
 {
 #ifdef DEBUG
     int valid;
     struct emptyfs_mount *mntp;
 
-    kassert_nonnull(vn);
+    kassert_nonnull(vp);
 
-    mntp = emptyfs_mount_from_mp(vnode_mount(vn));
+    mntp = emptyfs_mount_from_mp(vnode_mount(vp));
 
     lck_mtx_lock(mntp->mtx_root);
-    valid = (vn == mntp->rootvp);
+    valid = (vp == mntp->rootvp);
     lck_mtx_unlock(mntp->mtx_root);
 
     kassertf(valid, "invalid vnode %p  vid: %#x type: %d",
-                        vn, vnode_vid(vn), vnode_vtype(vn));
+                        vp, vnode_vid(vp), vnode_vtype(vp));
 #else
-    kassert_nonnull(vn);
+    kassert_nonnull(vp);
 #endif
 }
 
@@ -172,7 +172,7 @@ static int emptyfs_vnop_lookup(struct vnop_lookup_args *ap)
     vnode_t *vpp;
     struct componentname *cnp;
     vfs_context_t ctx;
-    vnode_t vn = NULL;
+    vnode_t vp = NULL;
 
     kassert_nonnull(ap);
     desc = ap->a_desc;
@@ -197,11 +197,11 @@ static int emptyfs_vnop_lookup(struct vnop_lookup_args *ap)
          * The implementation is trivial
          */
         e = vnode_get(dvp);
-        if (e == 0) vn = dvp;
+        if (e == 0) vp = dvp;
     } else if (!strcmp(cnp->cn_nameptr, ".")) {
         /* Ditto */
         e = vnode_get(dvp);
-        if (e == 0) vn = dvp;
+        if (e == 0) vp = dvp;
     } else {
         LOG_DBG("vnop_lookup() ENOENT  op: %#x flags: %#x name: %s pn: %s",
             cnp->cn_nameiop, cnp->cn_flags, cnp->cn_nameptr, cnp->cn_pnbuf);
@@ -212,7 +212,7 @@ static int emptyfs_vnop_lookup(struct vnop_lookup_args *ap)
      * under all circumstances we should update *vpp
      *  .: we can maintain post-condition
      */
-    *vpp = vn;
+    *vpp = vp;
 
     if (e == 0) {
         kassert_nonnull(*vpp);
@@ -248,11 +248,9 @@ static int emptyfs_vnop_open(struct vnop_open_args *ap)
     mode = ap->a_mode;
     ctx = ap->a_context;
     kassert_nonnull(desc);
-    kassert_nonnull(vp);
+    assert_valid_vnode(vp);
     kassert_known_flags(mode, O_EVTONLY | O_NONBLOCK | O_APPEND | FREAD | FWRITE);
     kassert_nonnull(ctx);
-
-    assert_valid_vnode(vp);
 
     return 0;
 }
@@ -279,13 +277,11 @@ static int emptyfs_vnop_close(struct vnop_close_args *ap)
     fflag = ap->a_fflag;
     ctx = ap->a_context;
     kassert_nonnull(desc);
-    kassert_nonnull(vp);
+    assert_valid_vnode(vp);
     kassert_known_flags(fflag, O_EVTONLY | O_NONBLOCK | O_APPEND | FREAD | FWRITE);
     kassert_nonnull(ctx);
 
     /* empty implementation */
-
-    assert_valid_vnode(vp);
 
     return 0;
 }
@@ -381,7 +377,6 @@ static int emptyfs_vnop_reclaim(struct vnop_reclaim_args *ap)
     vp = ap->a_vp;
     ctx = ap->a_context;
     kassert_nonnull(desc);
-    kassert_nonnull(vp);
     assert_valid_vnode(vp);
     kassert_nonnull(ctx);
 
