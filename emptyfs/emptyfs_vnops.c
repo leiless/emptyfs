@@ -290,21 +290,105 @@ static int emptyfs_vnop_close(struct vnop_close_args *ap)
     return 0;
 }
 
-static int emptyfs_vnop_getattr(struct vnop_getattr_args *arg)
+static int emptyfs_vnop_getattr(struct vnop_getattr_args *ap)
 {
-    UNUSED(arg);
+    struct vnodeop_desc *desc;
+    vnode_t vp;
+    struct vnode_attr *vap;
+    vfs_context_t ctx;
+
+    kassert_nonnull(ap);
+    desc = ap->a_desc;
+    vp = ap->a_vp;
+    vap = ap->a_vap;
+    ctx = ap->a_context;
+    kassert_nonnull(desc);
+    assert_valid_vnode(vp);
+    kassert_nonnull(vap);
+    kassert_nonnull(ctx);
+
+    /* TODO */
+
     return 0;
 }
 
-static int emptyfs_vnop_readdir(struct vnop_readdir_args *arg)
+static int emptyfs_vnop_readdir(struct vnop_readdir_args *ap)
 {
-    UNUSED(arg);
+    UNUSED(ap);
     return 0;
 }
 
-static int emptyfs_vnop_reclaim(struct vnop_reclaim_args *arg)
+/*
+ * High-level function to relacim a vnode
+ */
+static void detach_root_vnode(struct emptyfs_mount *mntp, vnode_t vp)
 {
-    UNUSED(arg);
+    int e;
+
+    kassert_nonnull(mntp);
+    kassert_nonnull(vp);
+
+    lck_mtx_lock(mntp->mtx_root);
+
+    /*
+     * [sic]
+     * if `is_root_attaching' is set  rootvp will and must be NULL
+     *  if in such case  we just return
+     * that's expected behaviour if the system tries to reclaim the vnode
+     *  while other thread is in process of attaching it
+     */
+    if (mntp->is_root_attaching) {
+        kassert_null(mntp->rootvp);
+    }
+
+    if (mntp->rootvp != NULL) {
+        /* The only possible vnode is the root vnode */
+        kassert(mntp->rootvp == vp);
+
+        e = vnode_removefsref(mntp->rootvp);
+        kassertf(e == 0, "vnode_removefsref() fail  errno: %d", e);
+
+        mntp->rootvp = NULL;
+    } else {
+        /* Do nothing  someone else beat this reclaim */
+    }
+
+    lck_mtx_unlock(mntp->mtx_root);
+}
+
+/**
+ * Called by VFS to disassociate a vnode from underlying fsnode
+ *
+ * @vp      the vnode to reclaim
+ * @ctx     identity of the calling process
+ * @return  always 0(the kernel will panic if fail)
+ *
+ * trivial reclaim implementation
+ *  it's NOT the point where  for example you write the fsnode back to disk
+ *  rather you should do this in vnop_inactive entry point
+ * in a proper file system  this entry would have to coordinate
+ *  with fsnode hash layer
+ */
+static int emptyfs_vnop_reclaim(struct vnop_reclaim_args *ap)
+{
+    struct vnodeop_desc *desc;
+    vnode_t vp;
+    vfs_context_t ctx;
+    struct emptyfs_mount *mntp;
+
+    kassert_nonnull(ap);
+    desc = ap->a_desc;
+    vp = ap->a_vp;
+    ctx = ap->a_context;
+    kassert_nonnull(desc);
+    kassert_nonnull(vp);
+    assert_valid_vnode(vp);
+    kassert_nonnull(ctx);
+
+    /* do reclaim as if we have a fsnoe hash layer */
+    mntp = emptyfs_mount_from_mp(vnode_mount(vp));
+    detach_root_vnode(mntp, vp);
+
     return 0;
 }
 
