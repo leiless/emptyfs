@@ -5,6 +5,7 @@
 #include "emptyfs_vnops.h"
 #include "emptyfs_vfsops.h"
 #include <sys/fcntl.h>
+#include <sys/dirent.h>
 
 /*
  * this variable will be set when we register VFS plugin via vfs_fsadd()
@@ -286,12 +287,29 @@ static int emptyfs_vnop_close(struct vnop_close_args *ap)
     return 0;
 }
 
+/*
+ * Called by VFS to get info about a vnode
+ *  (i.e. stat getattrlist syscalls in user space)
+ *
+ * @vp      the vnode whose info to retrieve
+ * @vap     describes the attributes requested upon return
+ * @ctx     identity of the calling process
+ *
+ * [sic] XXX:
+ *  for attributes whose values readily available  use VATTR_RETURN
+ *    macro to unilaterally return the value
+ *
+ *  for attributes whose values hard to calculate  use VATTR_IS_ACTIVE to see
+ *    if the caller requested that attribute
+ *    copy the value into the appropriate field if it's
+ */
 static int emptyfs_vnop_getattr(struct vnop_getattr_args *ap)
 {
     struct vnodeop_desc *desc;
     vnode_t vp;
     struct vnode_attr *vap;
     vfs_context_t ctx;
+    struct emptyfs_mount *mntp;
 
     kassert_nonnull(ap);
     desc = ap->a_desc;
@@ -299,18 +317,68 @@ static int emptyfs_vnop_getattr(struct vnop_getattr_args *ap)
     vap = ap->a_vap;
     ctx = ap->a_context;
     kassert_nonnull(desc);
+    /* We have only one vnode(i.e. the root vnode) */
+    kassert(vnode_isdir(vp));
     assert_valid_vnode(vp);
     kassert_nonnull(vap);
     kassert_nonnull(ctx);
 
-    /* TODO */
+    mntp = emptyfs_mount_from_mp(vnode_mount(vp));
+
+    /* Trivial implementation */
+
+    /*
+     * [sic]
+     * Impleentation of stat(2) requires that we support va_rdev
+     *  even on vnodes that aren't device vnode
+     */
+    VATTR_RETURN(vap, va_rdev, 0);
+    VATTR_RETURN(vap, va_nlink, 2);
+    VATTR_RETURN(vap, va_data_size, sizeof(struct dirent) << 1);
+
+    /* umask 0555 */
+    VATTR_RETURN(vap, va_mode,
+        S_IFDIR | S_IRUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
+    VATTR_RETURN(vap, va_create_time, mntp->attr.f_create_time);
+    VATTR_RETURN(vap, va_access_time, mntp->attr.f_access_time);
+    VATTR_RETURN(vap, va_modify_time, mntp->attr.f_modify_time);
+    VATTR_RETURN(vap, va_change_time, mntp->attr.f_modify_time);
+
+    VATTR_RETURN(vap, va_fileid, 2);
+    VATTR_RETURN(vap, va_fsid, mntp->devid);
 
     return 0;
 }
 
 static int emptyfs_vnop_readdir(struct vnop_readdir_args *ap)
 {
-    UNUSED(ap);
+    struct vnodeop_desc *desc;
+    vnode_t vp;
+    struct uio *uio;
+    int flags;
+    int *eofflag;
+    int *numdirent;
+    vfs_context_t ctx;
+
+    kassert_nonnull(ap);
+    desc = ap->a_desc;
+    vp = ap->a_vp;
+    uio = ap->a_uio;
+    flags = ap->a_flags;
+    eofflag = ap->a_eofflag;
+    numdirent = ap->a_numdirent;
+    ctx = ap->a_context;
+    kassert_nonnull(desc);
+    assert_valid_vnode(vp);
+    kassert_nonnull(uio);
+    kassert_known_flags(flags,
+        VNODE_READDIR_EXTENDED | VNODE_READDIR_REQSEEKOFF |
+        VNODE_READDIR_SEEKOFF32 | VNODE_READDIR_NAMEMAX);
+    /* eofflag and numdirent can be NULL */
+    kassert_nonnull(ctx);
+
+    /* TODO */
+
     return 0;
 }
 
