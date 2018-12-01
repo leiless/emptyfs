@@ -383,6 +383,11 @@ static int uiomove_atomic(
  * @eofflag     return a flag to indicate if we reached the last directory entry
  * @numdirent   return a count of number of directory entries that we've read
  * @ctx         identity of the calling process
+ *
+ * [sic]
+ * The hardest thing to understand about this entry point is the UIO management
+ *  there are two tricky aspects
+ * For more info you should check sample code func docs
  */
 static int emptyfs_vnop_readdir(struct vnop_readdir_args *ap)
 {
