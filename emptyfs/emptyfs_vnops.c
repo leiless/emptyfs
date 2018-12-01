@@ -360,7 +360,7 @@ static int uiomove_atomic(
     kassert_nonnull(addr);
     kassert_nonnull(uio);
 
-    if (unlikely(size != (int) size)) {
+    if (unlikely(size > INT_MAX)) {
         e = ERANGE;
     } else if (unlikely(size > uio_resid(uio))) {
         e = ENOBUFS;
