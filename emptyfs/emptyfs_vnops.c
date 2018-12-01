@@ -289,7 +289,7 @@ static int emptyfs_vnop_close(struct vnop_close_args *ap)
 
 /*
  * Called by VFS to get info about a vnode
- *  (i.e. stat getattrlist syscalls in user space)
+ *  (i.e. backing support of stat getattrlist syscalls)
  *
  * @vp      the vnode whose info to retrieve
  * @vap     describes the attributes requested upon return
@@ -350,8 +350,43 @@ static int emptyfs_vnop_getattr(struct vnop_getattr_args *ap)
     return 0;
 }
 
+static int uiomove_atomic(
+        void * __nonnull addr,
+        size_t size,
+        uio_t __nonnull uio)
+{
+    int e;
+
+    kassert_nonnull(addr);
+    kassert_nonnull(uio);
+
+    if (unlikely(size != (int) size)) {
+        e = ERANGE;
+    } else if (unlikely(size > uio_resid(uio))) {
+        e = ENOBUFS;
+    } else {
+        e = uiomove(addr, (int) size, uio);
+    }
+
+    return e;
+}
+
+/*
+ * Called by VFS to iterate contents of a directory
+ *  (i.e. backing support of getdirentries syscall)
+ *
+ * @vp          the directory we're iterating
+ * @uio         XXX
+ * @flags       iteration options
+ *              currently there're 4 options  neither of which we support
+ *              needed if the file system is to be NFS exported
+ * @eofflag     return a flag to indicate if we reached the last directory entry
+ * @numdirent   return a count of number of directory entries that we've read
+ * @ctx         identity of the calling process
+ */
 static int emptyfs_vnop_readdir(struct vnop_readdir_args *ap)
 {
+    int e = 0;
     struct vnodeop_desc *desc;
     vnode_t vp;
     struct uio *uio;
@@ -359,6 +394,10 @@ static int emptyfs_vnop_readdir(struct vnop_readdir_args *ap)
     int *eofflag;
     int *numdirent;
     vfs_context_t ctx;
+    int eof = 0;
+    int num = 0;
+    struct dirent di;
+    off_t index;
 
     kassert_nonnull(ap);
     desc = ap->a_desc;
@@ -369,6 +408,7 @@ static int emptyfs_vnop_readdir(struct vnop_readdir_args *ap)
     numdirent = ap->a_numdirent;
     ctx = ap->a_context;
     kassert_nonnull(desc);
+    kassert(vnode_isdir(vp));
     assert_valid_vnode(vp);
     kassert_nonnull(uio);
     kassert_known_flags(flags,
@@ -377,9 +417,66 @@ static int emptyfs_vnop_readdir(struct vnop_readdir_args *ap)
     /* eofflag and numdirent can be NULL */
     kassert_nonnull(ctx);
 
-    /* TODO */
+    if (flags & (VNODE_READDIR_EXTENDED | VNODE_READDIR_REQSEEKOFF |
+                VNODE_READDIR_SEEKOFF32 | VNODE_READDIR_NAMEMAX)) {
+        /* only make sense if backing file system is NFS exported */
+        e = EINVAL;
+        goto out_exit;
+    }
 
-    return 0;
+    di.d_fileno = 1;
+    di.d_reclen = sizeof(di);
+    di.d_type = DT_DIR;
+
+    kassert(uio_offset(uio) % 7 == 0);
+    index = uio_offset(uio) / 7;
+
+    if (index == 0) {
+        di.d_namlen = (uint8_t) strlen(".");
+        strlcpy(di.d_name, ".", sizeof(di.d_name));
+        e = uiomove_atomic(&di, sizeof(di), uio);
+        if (e) {
+            LOG_ERR("uiomove_atomic() fail  errno: %d", e);
+        } else {
+            num++;
+            index++;
+        }
+    }
+
+    if (e == 0 && index == 1) {
+        di.d_namlen = (uint8_t) strlen("..");
+        strlcpy(di.d_name, "..", sizeof(di.d_name));
+        e = uiomove_atomic(&di, sizeof(di), uio);
+        if (e) {
+            LOG_ERR("uiomove_atomic() fail  errno: %d", e);
+        } else {
+            num++;
+            index++;
+        }
+    }
+
+    /*
+     * If we failed :. there wasn't enough space in user space buffer
+     *  just swallow the error  this will resulting getdirentries(2) returning
+     *  less than the buffer size(possibly even zero)
+     *  the caller is expected to cope with that
+     */
+    if (e == ENOBUFS) {
+        e = 0;
+    } else if (e) {
+        goto out_exit;
+    }
+
+    /* Update uio offset and set EOF flag */
+    uio_setoffset(uio, index * 7);
+    eof = index > 1;
+
+    /* Copy out any info requested by caller */
+    if (eofflag != NULL)    *eofflag = eof;
+    if (numdirent != NULL)  *numdirent = num;
+
+out_exit:
+    return e;
 }
 
 /*
