@@ -318,7 +318,8 @@ static int emptyfs_vfsop_mount(
         LOG_ERR("mount emptyfs success yet force failure  errno: %d", e);
         goto out_exit;
     } else {
-        LOG_INF("mount emptyfs success  TODO: talk more");
+        LOG_INF("mount emptyfs success  rdev: %#x dbg: %d",
+                    mntp->devid, mntp->dbg_mode);
     }
 
 out_exit:

@@ -166,14 +166,13 @@ int util_put_kcb(void)
 
 /**
  * Invalidate further kcb operations(should call only once)
- * @return      always return -1
  */
-int util_invalidate_kcb(void)
+void util_invalidate_kcb(void)
 {
-    return kcb(2);
+    (void) kcb(2);
 }
 
-#define UUID_STR_BUFSZ    37  /* EOS included */
+#define UUID_STR_BUFSZ      sizeof(uuid_string_t)
 
 /**
  * Extract UUID load command from a Mach-O address

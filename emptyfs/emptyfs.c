@@ -6,17 +6,6 @@
 #include <libkern/libkern.h>
 #include <libkern/locks.h>
 
-#if 0
-#include <sys/errno.h>
-#include <sys/mount.h>
-#include <sys/vnode.h>
-#include <sys/vnode_if.h>
-#include <sys/stat.h>
-#include <sys/dirent.h>
-#include <sys/proc.h>
-#include <sys/fcntl.h>
-#endif
-
 #include "emptyfs.h"
 #include "utils.h"
 #include "emptyfs_vfsops.h"

@@ -123,7 +123,7 @@
     }                                                                       \
 } while (0)
 #else
-#define kassert_known_flags(flags, known) ((void) 0)
+#define kassert_known_flags(flags, known)   UNUSED(flags, known)
 #endif
 
 void *util_malloc(size_t, int);
@@ -134,6 +134,7 @@ void util_massert(void);
 int util_get_kcb(void);
 int util_put_kcb(void);
 int util_read_kcb(void);
+void util_invalidate_kcb(void);
 
 int util_vma_uuid(const vm_address_t, uuid_string_t);
 
