@@ -11,6 +11,7 @@
 
 readonly_extern struct vfsops emptyfs_vfsops;
 
+/* The second largest 32-bit De Bruijn constant */
 #define EMPTYFS_MNT_MAGIC       0x0fb9ac4a
 
 #define EMPTYFS_VL_MAXLEN       32

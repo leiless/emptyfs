@@ -74,7 +74,7 @@ CPPFLAGS+=	-DKERNEL \
 # Convenience defines
 # BUNDLEID macro will be used in KMOD_EXPLICIT_DECL
 #
-CPPFLAGS+=	-D__TZ__=\"$(shell date +%Z)\"	\
+CPPFLAGS+=	-D__TZ__=\"$(shell date +%z)\"	\
 		-DKEXTNAME_S=\"$(KEXTNAME)\"		\
 		-DKEXTVERSION_S=\"$(KEXTVERSION)\"	\
 		-DKEXTBUILD_S=\"$(KEXTBUILD)\"		\

@@ -9,7 +9,7 @@
 #include "utils.h"
 
 #ifndef __kext_makefile__
-#define __TZ__          "GMT"
+#define __TZ__          "+0000"
 #define BUNDLEID_S      "cn.junkman.kext.emptyfs"
 #define KEXTVERSION_S   "0000.00.01"
 #define KEXTBUILD_S     "1"
@@ -17,7 +17,7 @@
 
 #define LCKGRP_NAME     BUNDLEID_S ".lckgrp"
 
-#define EMPTYFS_FSTYPENO    0           /* will assign one dynamically */
+#define EMPTYFS_NOTYPENUM   0           /* will assign one dynamically */
 #define EMPTYFS_NAME        "emptyfs"
 
 /*
@@ -25,7 +25,8 @@
  *  we do our own internal locking and thus don't need funnel protection
  *
  * VFS_TBLNOTYPENUM:
- *  we don't have a pre-defined file system type(the VT_XXX constants in <sys/vnode.h>)
+ *  we don't have a pre-defined file system type
+ *  (the VT_XXX constants in <sys/vnode.h>)
  *  VFS should dynamically assign us a type
  *
  * VFS_TBLLOCALVOL:
@@ -49,7 +50,7 @@
 
 readonly_extern lck_grp_t *lckgrp;
 
-/* The maximum 32-bit De Bruijn constant */
+/* The largest 32-bit De Bruijn constant */
 #define EMPTYFS_MNTARG_MAGIC        0x0fb9ac52
 
 /*
@@ -67,7 +68,7 @@ readonly_extern lck_grp_t *lckgrp;
  * see: emptyfs_vfsops.c#emptyfs_vfsop_mount
  */
 struct emptyfs_mnt_args {
-#ifdef KERNEL
+#ifndef KERNEL
     /* path to the block device node to mount  example: /dev/disk0s1 */
     const char *dev_node_path;
 #endif

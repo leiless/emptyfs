@@ -19,10 +19,10 @@ static struct vfs_fsentry emptyfs_vfsentry = {
     &emptyfs_vfsops,
     ARRAY_SIZE(emptyfs_vnopv_desc_list),
     emptyfs_vnopv_desc_list,
-    EMPTYFS_FSTYPENO,
+    EMPTYFS_NOTYPENUM,
     EMPTYFS_NAME,
     EMPTYFS_VFS_FLAGS,
-    {NULL, NULL},
+    {NULL, NULL},       /* Reserved fields */
 };
 
 /*
@@ -47,7 +47,10 @@ kern_return_t emptyfs_start(kmod_info_t *ki, void *d __unused)
     LOG("kext executable uuid %s", uuid);
 
     lckgrp = lck_grp_alloc_init(LCKGRP_NAME, LCK_GRP_ATTR_NULL);
-    if (lckgrp == NULL) goto out_lckgrp;
+    if (lckgrp == NULL) {
+        LOG_ERR("lck_grp_alloc_init() fail");
+        goto out_lckgrp;
+    }
     LOG_DBG("lock group(%s) allocated", LCKGRP_NAME);
 
     e = vfs_fsadd(&emptyfs_vfsentry, &emptyfs_vfstbl_ref);
@@ -83,6 +86,8 @@ kern_return_t emptyfs_stop(kmod_info_t *ki __unused, void *d __unused)
     }
 
     lck_grp_free(lckgrp);
+
+    util_massert();
 
     LOG("unloaded %s version %s build %s (%s %s)",
         BUNDLEID_S, KEXTVERSION_S, KEXTBUILD_S, __TIMESTAMP__, __TZ__);
