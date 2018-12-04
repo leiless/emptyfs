@@ -612,8 +612,8 @@ static int emptyfs_vfsop_getattr(
     VFSATTR_RETURN(attr, f_fssubtype, mntp->attr.f_fssubtype);
 
     if (VFSATTR_IS_ACTIVE(attr, f_vol_name)) {
-        strncpy(attr->f_vol_name, mntp->attr.f_vol_name, EMPTYFS_VL_MAXLEN);
-        attr->f_vol_name[EMPTYFS_VL_MAXLEN-1] = '\0';
+        strncpy(attr->f_vol_name, mntp->attr.f_vol_name, EMPTYFS_VOLNAME_MAXLEN);
+        attr->f_vol_name[EMPTYFS_VOLNAME_MAXLEN-1] = '\0';
         VFSATTR_SET_SUPPORTED(attr, f_vol_name);
     }
 

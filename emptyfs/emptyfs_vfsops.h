@@ -14,7 +14,7 @@ readonly_extern struct vfsops emptyfs_vfsops;
 /* The second largest 32-bit De Bruijn constant */
 #define EMPTYFS_MNT_MAGIC       0x0fb9ac4a
 
-#define EMPTYFS_VL_MAXLEN       32
+#define EMPTYFS_VOLNAME_MAXLEN  32
 
 struct emptyfs_mount {
     /* must be EMPTYFS_MNT_MAGIC */
@@ -28,7 +28,7 @@ struct emptyfs_mount {
     /* backing device vnode of above;  we use a refcnt. on it */
     vnode_t devvp;
     /* volume name(UTF8 encoded) */
-    char volname[EMPTYFS_VL_MAXLEN];
+    char volname[EMPTYFS_VOLNAME_MAXLEN];
     /* pre-calculated volume attributes */
     struct vfs_attr attr;
 

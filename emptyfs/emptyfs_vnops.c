@@ -124,7 +124,7 @@ static struct vnodeopv_desc emptyfs_vnopv_desc = {
  *
  * we only support standard vnodes .: our array only has one entry
  */
-struct vnodeopv_desc *emptyfs_vnopv_desc_list[__EMPTYFS_OPV_SZ] = {
+struct vnodeopv_desc *emptyfs_vnopv_desc_list[__EFS_VNOPV_SZ] = {
     &emptyfs_vnopv_desc,
 };
 

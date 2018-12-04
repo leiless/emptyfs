@@ -9,8 +9,8 @@
 #include <sys/vnode.h>
 #include "utils.h"
 
-#define __EMPTYFS_OPV_SZ 1      /* used in this header only */
-readonly_extern struct vnodeopv_desc *emptyfs_vnopv_desc_list[__EMPTYFS_OPV_SZ];
+#define __EFS_VNOPV_SZ      1      /* used in this header only */
+readonly_extern struct vnodeopv_desc *emptyfs_vnopv_desc_list[__EFS_VNOPV_SZ];
 
 extern int (**emptyfs_vnop_p)(void *);
 
