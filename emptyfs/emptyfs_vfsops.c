@@ -365,6 +365,13 @@ static int emptyfs_vfsop_start(
     return 0;
 }
 
+/*
+ * Called by VFS to unmount a volume
+ * @mp          mount reference
+ * @flags       unmount flags
+ * @ctx         identity of the calling process
+ * @return      0 if success  errno o.w.
+ */
 static int emptyfs_vfsop_unmount(
         struct mount *mp,
         int flags,
@@ -399,7 +406,7 @@ static int emptyfs_vfsop_unmount(
     kassert(!mntp->is_root_waiting);
 
     /*
-     * vflush() call above forces VFS to claim any vnodes in our volume
+     * vflush() call above forces VFS to reclaim any vnode in our volume
      *  in such case  the root vnode should be NULL
      */
     kassert(mntp->rootvp == NULL);
