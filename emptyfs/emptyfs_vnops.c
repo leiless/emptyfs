@@ -16,6 +16,15 @@ int (**emptyfs_vnop_p)(void *);
 
 #define VNOP_FUNC   int (*)(void *)
 
+/*
+ * Q: default vnode operation if a specific vnop not yet implemented?
+ *      i.e. a fallback generic operation if NYI
+ *
+ * NOTE:
+ *  you may use builtin <sys/vnode.h>#vn_default_error()
+ *  it merely return ENOTSUP  like what we do
+ *  the KPI resides in com.apple.kpi.bsd
+ */
 static inline int emptyfs_vnop_default(struct vnop_generic_args *arg __unused)
 {
     return ENOTSUP;
@@ -33,67 +42,6 @@ static int emptyfs_vnop_reclaim(struct vnop_reclaim_args *);
  * describes all vnode operations supported by vnodes created by our VFS plugin
  */
 static struct vnodeopv_entry_desc emptyfs_vnopv_entry_desc_list[] = {
-#if 0
-    /* which operation this is */
-    struct vnodeop_desc *opve_op;
-    /* code implementing this operation */
-    int (*opve_impl)(void *);
-
-    struct vnodeop_desc vnop_default_desc;
-    struct vnodeop_desc vnop_lookup_desc;
-    struct vnodeop_desc vnop_create_desc;
-    struct vnodeop_desc vnop_whiteout_desc; /* obsolete */
-    struct vnodeop_desc vnop_mknod_desc;
-    struct vnodeop_desc vnop_open_desc;
-    struct vnodeop_desc vnop_close_desc;
-    struct vnodeop_desc vnop_access_desc;
-    struct vnodeop_desc vnop_getattr_desc;
-    struct vnodeop_desc vnop_setattr_desc;
-    struct vnodeop_desc vnop_read_desc;
-    struct vnodeop_desc vnop_write_desc;
-    struct vnodeop_desc vnop_ioctl_desc;
-    struct vnodeop_desc vnop_select_desc;
-    struct vnodeop_desc vnop_exchange_desc;
-    struct vnodeop_desc vnop_revoke_desc;
-    struct vnodeop_desc vnop_mmap_desc;
-    struct vnodeop_desc vnop_mnomap_desc;
-    struct vnodeop_desc vnop_fsync_desc;
-    struct vnodeop_desc vnop_remove_desc;
-    struct vnodeop_desc vnop_link_desc;
-    struct vnodeop_desc vnop_rename_desc;
-    struct vnodeop_desc vnop_renamex_desc;
-    struct vnodeop_desc vnop_mkdir_desc;
-    struct vnodeop_desc vnop_rmdir_desc;
-    struct vnodeop_desc vnop_symlink_desc;
-    struct vnodeop_desc vnop_readdir_desc;
-    struct vnodeop_desc vnop_readdirattr_desc;
-    struct vnodeop_desc vnop_getattrlistbulk_desc;
-    struct vnodeop_desc vnop_readlink_desc;
-    struct vnodeop_desc vnop_inactive_desc;
-    struct vnodeop_desc vnop_reclaim_desc;
-    struct vnodeop_desc vnop_print_desc;
-    struct vnodeop_desc vnop_pathconf_desc;
-    struct vnodeop_desc vnop_advlock_desc;
-    struct vnodeop_desc vnop_truncate_desc;
-    struct vnodeop_desc vnop_allocate_desc;
-    struct vnodeop_desc vnop_pagein_desc;
-    struct vnodeop_desc vnop_pageout_desc;
-    struct vnodeop_desc vnop_searchfs_desc;
-    struct vnodeop_desc vnop_copyfile_desc;
-    struct vnodeop_desc vnop_clonefile_desc;
-    struct vnodeop_desc vnop_blktooff_desc;
-    struct vnodeop_desc vnop_offtoblk_desc;
-    struct vnodeop_desc vnop_blockmap_desc;
-    struct vnodeop_desc vnop_strategy_desc;
-    struct vnodeop_desc vnop_bwrite_desc;
-
-    #if NAMEDSTREAMS
-    struct vnodeop_desc vnop_getnamedstream_desc;
-    struct vnodeop_desc vnop_makenamedstream_desc;
-    struct vnodeop_desc vnop_removenamedstream_desc;
-    #endif
-#endif
-
     {&vnop_default_desc, (VNOP_FUNC) emptyfs_vnop_default},
     {&vnop_lookup_desc, (VNOP_FUNC) emptyfs_vnop_lookup},
     {&vnop_open_desc, (VNOP_FUNC) emptyfs_vnop_open},
@@ -155,13 +103,13 @@ static void assert_valid_vnode(vnode_t vp)
 }
 
 /**
- * Called by VFS to do a file lookup
+ * Called by VFS to do a directory lookup
  * @desc    (unused) identity which vnode operation(lookup in such case)
  * @dvp     the directory to search
  * @vpp     pointer to a vnode where we return the found item
  *          the resulting vnode must have an io refcnt.
- *          and the caller is responsible to release it
- * @cnp     describes the name to search for  more see its definition
+ *          and the caller is responsible to RELEASE it
+ * @cnp     describes the name to search for  more see <sys/vnode.h>
  * @ctx     identity of the calling process
  * @return  0 if found  errno o.w.
  */
@@ -188,6 +136,8 @@ static int emptyfs_vnop_lookup(struct vnop_lookup_args *ap)
     kassert_nonnull(vpp);
     kassert_nonnull(cnp);
     kassert_nonnull(ctx);
+
+    /* Trivial implementation */
 
     if (cnp->cn_flags & ISDOTDOT) {
         /*
@@ -225,7 +175,7 @@ static int emptyfs_vnop_lookup(struct vnop_lookup_args *ap)
 }
 
 /**
- * Called by VFS to open a vnode for access
+ * Called by VFS to open a file for access
  * @vp      the vnode being opened
  * @mode    open flags
  * @ctx     identity of the calling process
@@ -249,15 +199,19 @@ static int emptyfs_vnop_open(struct vnop_open_args *ap)
     mode = ap->a_mode;
     ctx = ap->a_context;
     kassert_nonnull(desc);
+    kassert(vnode_isdir(vp));
     assert_valid_vnode(vp);
+    /* NOTE: there seems too many open flags */
     kassert_known_flags(mode, O_EVTONLY | O_NONBLOCK | O_APPEND | FREAD | FWRITE);
     kassert_nonnull(ctx);
+
+    /* Empty implementation */
 
     return 0;
 }
 
 /**
- * Caller by VFS to close a vnode for access
+ * Caller by VFS to close a file from access
  *
  * [sic]
  * this entry is not as useful as you might think :. a vnode can be accessed
@@ -278,22 +232,25 @@ static int emptyfs_vnop_close(struct vnop_close_args *ap)
     fflag = ap->a_fflag;
     ctx = ap->a_context;
     kassert_nonnull(desc);
+    kassert(vnode_isdir(vp));
     assert_valid_vnode(vp);
+    /* NOTE: there seems too many open flags */
     kassert_known_flags(fflag, O_EVTONLY | O_NONBLOCK | O_APPEND | FREAD | FWRITE);
     kassert_nonnull(ctx);
 
-    /* empty implementation */
+    /* Empty implementation */
 
     return 0;
 }
 
 /*
- * Called by VFS to get info about a vnode
+ * Called by VFS to get attributes about a vnode
  *  (i.e. backing support of stat getattrlist syscalls)
  *
- * @vp      the vnode whose info to retrieve
+ * @vp      the vnode whose attributes to retrieve
  * @vap     describes the attributes requested upon return
  * @ctx     identity of the calling process
+ * @return  0 if found  errno o.w.
  *
  * [sic] XXX:
  *  for attributes whose values readily available  use VATTR_RETURN
@@ -329,7 +286,7 @@ static int emptyfs_vnop_getattr(struct vnop_getattr_args *ap)
 
     /*
      * [sic]
-     * Impleentation of stat(2) requires that we support va_rdev
+     * Implementation of stat(2) requires that we support va_rdev
      *  even on vnodes that aren't device vnode
      */
     VATTR_RETURN(vap, va_rdev, 0);
@@ -346,6 +303,15 @@ static int emptyfs_vnop_getattr(struct vnop_getattr_args *ap)
 
     VATTR_RETURN(vap, va_fileid, 2);
     VATTR_RETURN(vap, va_fsid, mntp->devid);
+
+#if 0
+    VATTR_RETURN(vap, va_type, XXX);    /* Handled by VFS */
+    /*
+     * Let VFS get from f_mntonname
+     * see: emptyfs_vfsops.c#emptyfs_vfsop_mount()
+     */
+    VATTR_RETURN(vap, va_name, XXX);
+#endif
 
     return 0;
 }
@@ -524,6 +490,7 @@ static void detach_root_vnode(struct emptyfs_mount *mntp, vnode_t vp)
 
 /**
  * Called by VFS to disassociate a vnode from underlying fsnode
+ * [sic] Release filesystem-internal resources for a vnode
  *
  * @vp      the vnode to reclaim
  * @ctx     identity of the calling process

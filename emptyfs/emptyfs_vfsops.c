@@ -531,7 +531,7 @@ static int get_root_vnode(
     return e;
 }
 
-/**
+/*
  * Called by VFS to get root vnode of this file system
  * @mp      the mount structure reference
  * @vpp     pointer to a vnode reference
