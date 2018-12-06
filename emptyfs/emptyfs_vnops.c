@@ -316,6 +316,13 @@ static int emptyfs_vnop_getattr(struct vnop_getattr_args *ap)
     return 0;
 }
 
+/**
+ * Safe wrapper of uiomove()
+ * @addr        source address
+ * @size        source address buffer size
+ * @uio         "move" destination
+ * @return      0 if success  errno o.w.
+ */
 static int uiomove_atomic(
         void * __nonnull addr,
         size_t size,
@@ -342,12 +349,14 @@ static int uiomove_atomic(
  *  (i.e. backing support of getdirentries syscall)
  *
  * @vp          the directory we're iterating
- * @uio         XXX
+ * @uio         destination information for resulting direntries
  * @flags       iteration options
  *              currently there're 4 options  neither of which we support
  *              needed if the file system is to be NFS exported
  * @eofflag     return a flag to indicate if we reached the last directory entry
+ *              should be set to 1 if the end of the directory has been reached
  * @numdirent   return a count of number of directory entries that we've read
+ *              should be set to number of entries written into buffer
  * @ctx         identity of the calling process
  *
  * [sic]
@@ -365,6 +374,7 @@ static int emptyfs_vnop_readdir(struct vnop_readdir_args *ap)
     int *eofflag;
     int *numdirent;
     vfs_context_t ctx;
+
     int eof = 0;
     int num = 0;
     struct dirent di;
@@ -388,6 +398,8 @@ static int emptyfs_vnop_readdir(struct vnop_readdir_args *ap)
     /* eofflag and numdirent can be NULL */
     kassert_nonnull(ctx);
 
+    /* Trivial implementation */
+
     if (flags & (VNODE_READDIR_EXTENDED | VNODE_READDIR_REQSEEKOFF |
                 VNODE_READDIR_SEEKOFF32 | VNODE_READDIR_NAMEMAX)) {
         /* only make sense if backing file system is NFS exported */
@@ -395,7 +407,7 @@ static int emptyfs_vnop_readdir(struct vnop_readdir_args *ap)
         goto out_exit;
     }
 
-    di.d_fileno = 1;
+    di.d_fileno = 2;                /* Q: why NOT set dynamically? */
     di.d_reclen = sizeof(di);
     di.d_type = DT_DIR;
 

@@ -126,6 +126,12 @@
 #define kassert_known_flags(flags, known)   UNUSED(flags, known)
 #endif
 
+/*
+ * Capital Q stands for quick
+ * XXX: should only used for `char[]'  NEVER `char *'
+ */
+#define QSTRLEN(s)          (sizeof(s) - 1)
+
 void *util_malloc(size_t, int);
 void *util_realloc(void *, size_t, size_t, int);
 void util_mfree(void *);
