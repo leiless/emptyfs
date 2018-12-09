@@ -47,7 +47,7 @@ static __dead2 void version(char * __nonnull argv0)
 {
     ASSERT_NONNULL(argv0);
     fprintf(stderr,
-            "%s v%s\n"
+            "%s version %s\n"
             "built date %s %s\n"
             "built with c++ inc %s\n\n",
             basename(argv0), MOUNT_EMPTYFS_VERSION,
@@ -134,6 +134,9 @@ int main(int argc, char *argv[])
     if (argc - optind != 2) usage(argv[0]);
     fspec = argv[optind];
     mp = argv[optind+1];
+
+    LOG_DBG("dbg_mode: %d force_fail: %d fspec: %s mp: %s",
+                dbg_mode, force_fail, fspec, mp);
 
     return do_mount(fspec, mp, dbg_mode, force_fail);
 }
