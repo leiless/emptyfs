@@ -58,7 +58,7 @@ static __dead2 void version(char * __nonnull argv0)
 
 static int do_mount(
         const char * __nonnull fspec,
-        const char *__nonnull mp,
+        const char * __nonnull mp,
         uint32_t dbg_mode,
         uint32_t force_fail)
 {

@@ -93,17 +93,19 @@
  *
  * see: xnu/osfmk/kern/printf.c#printf
  */
-#define LOG(fmt, ...)        printf(KEXTNAME_S ": " fmt "\n", ##__VA_ARGS__)
+#define LOG(fmt, ...)           printf(KEXTNAME_S ": " fmt "\n", ##__VA_ARGS__)
 
-#define LOG_INF(fmt, ...)    LOG("[INF] " fmt, ##__VA_ARGS__)
-#define LOG_WAR(fmt, ...)    LOG("[WAR] " fmt, ##__VA_ARGS__)
-#define LOG_ERR(fmt, ...)    LOG("[ERR] " fmt, ##__VA_ARGS__)
-#define LOG_BUG(fmt, ...)    LOG("[BUG] " fmt, ##__VA_ARGS__)
-#define LOG_OFF(fmt, ...)    (void) ((void) 0, ##__VA_ARGS__)
+#define LOG_INF(fmt, ...)       LOG("[INF] " fmt, ##__VA_ARGS__)
+#define LOG_WAR(fmt, ...)       LOG("[WAR] " fmt, ##__VA_ARGS__)
+#define LOG_ERR(fmt, ...)       LOG("[ERR] " fmt, ##__VA_ARGS__)
+#define LOG_BUG(fmt, ...)       LOG("[BUG] " fmt, ##__VA_ARGS__)
+#define LOG_OFF(fmt, ...)       (void) ((void) 0, ##__VA_ARGS__)
 #ifdef DEBUG
-#define LOG_DBG(fmt, ...)    LOG("[DBG] " fmt, ##__VA_ARGS__)
+#define LOG_DBG(fmt, ...)       LOG("[DBG] " fmt, ##__VA_ARGS__)
+#define LOG_TRA(fmt, ...)       LOG("[TRA %s] " fmt, __func__, ##__VA_ARGS__)
 #else
-#define LOG_DBG(fmt, ...)    LOG_OFF(fmt, ##__VA_ARGS__)
+#define LOG_DBG(fmt, ...)       LOG_OFF(fmt, ##__VA_ARGS__)
+#define LOG_TRA(fmt, ...)       LOG_OFF(fmt, ##__VA_ARGS__)
 #endif
 
 #ifdef DEBUG

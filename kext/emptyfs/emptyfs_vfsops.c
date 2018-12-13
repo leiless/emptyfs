@@ -216,7 +216,7 @@ static void emptyfs_init_attrs(
 static int emptyfs_vfsop_mount(
         struct mount *mp,
         vnode_t devvp,
-        user_addr_t data,
+        user_addr_t udata,
         vfs_context_t ctx)
 {
     int e, e2;
@@ -226,8 +226,11 @@ static int emptyfs_vfsop_mount(
 
     kassert_nonnull(mp);
     kassert_nonnull(devvp);
-    kassert_nonnull(data);      /* Q: what if user passed NULL mount(3) arg. */
+    kassert_nonnull(udata);     /* Q: what if user passed NULL mount(3) arg. */
     kassert_nonnull(ctx);
+
+    LOG_TRA("mp: %p devvp: %p(%d) %#x data: %#llx",
+            mp, devvp, vnode_vtype(devvp), vnode_vid(devvp), udata);
 
     /*
      * this fs doesn't support over update a volume's state
@@ -239,7 +242,7 @@ static int emptyfs_vfsop_mount(
         goto out_exit;
     }
 
-    e = copyin(data, &args, sizeof(args));
+    e = copyin(udata, &args, sizeof(args));
     if (e) {
         LOG_ERR("copyin() fail  errno: %d", e);
         goto out_exit;
@@ -362,6 +365,9 @@ static int emptyfs_vfsop_start(
     kassert_nonnull(mp);
     kassert_known_flags(flags, 0);
     kassert_nonnull(ctx);
+
+    LOG_TRA("mp: %p flags: %#x", mp, flags);
+
     return 0;
 }
 
@@ -384,6 +390,8 @@ static int emptyfs_vfsop_unmount(
     kassert_nonnull(mp);
     kassert_known_flags(flags, MNT_FORCE);
     kassert_nonnull(ctx);
+
+    LOG_TRA("mp: %p flags: %#x", mp, flags);
 
     flush_flags = (flags & MNT_FORCE) ? FORCECLOSE : 0;
 
@@ -552,6 +560,8 @@ static int emptyfs_vfsop_root(
     kassert_nonnull(vpp);
     kassert_nonnull(ctx);
 
+    LOG_TRA("mp: %p vpp: %p %p", mp, vpp, *vpp);
+
     mntp = emptyfs_mount_from_mp(mp);
     e = get_root_vnode(mntp, &vn);
     /* under all circumstances we should set *vpp to maintain post-conditions */
@@ -562,6 +572,8 @@ static int emptyfs_vfsop_root(
     } else {
         kassert_null(*vpp);
     }
+
+    LOG_TRA("vpp: %p %p", vpp, *vpp);
 
     return e;
 }
@@ -587,8 +599,8 @@ static int emptyfs_vfsop_getattr(
     kassert_nonnull(attr);
     kassert_nonnull(ctx);
 
-    LOG_DBG("VFS getattr   f_active: %#llx f_supported: %#llx",
-                attr->f_active, attr->f_supported);
+    LOG_TRA("mp: %p attr: %p f_active: %#llx f_supported: %#llx",
+                mp, attr, attr->f_active, attr->f_supported);
 
     mntp = emptyfs_mount_from_mp(mp);
 
@@ -635,6 +647,9 @@ static int emptyfs_vfsop_getattr(
 
     /* no support f_quota */
     /* no support f_reserved */
+
+    LOG_TRA("f_active: %#llx f_supported: %#llx",
+            attr->f_active, attr->f_supported);
 
     return 0;
 }
