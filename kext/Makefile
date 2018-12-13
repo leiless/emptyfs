@@ -2,11 +2,7 @@
 # macOS generic kernel extension Makefile
 #
 
-KEXTNAME=emptyfs
-KEXTVERSION=0000.00.01
-KEXTBUILD=1
-BUNDLEDOMAIN=cn.junkman
-
+include Makefile.inc
 
 #
 # Check mandatory vars
@@ -44,15 +40,13 @@ ARCH?=		x86_64
 #ARCH?=		i386
 PREFIX?=	/Library/Extensions
 
-CODESIGN?=codesign
+# Set default XCode SDK
+SDKROOT?=	$(shell xcrun --sdk macosx --show-sdk-path)
 
-# Apple SDK
-ifneq "" "$(SDKROOT)"
 SDKFLAGS=	-isysroot $(SDKROOT)
 CC=		$(shell xcrun -find -sdk $(SDKROOT) cc)
 #CXX=		$(shell xcrun -find -sdk $(SDKROOT) c++)
 CODESIGN=	$(shell xcrun -find -sdk $(SDKROOT) codesign)
-endif
 
 #
 # Standard defines and includes for kernel extensions
@@ -74,12 +68,12 @@ CPPFLAGS+=	-DKERNEL \
 # Convenience defines
 # BUNDLEID macro will be used in KMOD_EXPLICIT_DECL
 #
-CPPFLAGS+=	-D__TZ__=\"$(shell date +%z)\"	\
-		-DKEXTNAME_S=\"$(KEXTNAME)\"		\
+CPPFLAGS+=	-DKEXTNAME_S=\"$(KEXTNAME)\"		\
 		-DKEXTVERSION_S=\"$(KEXTVERSION)\"	\
 		-DKEXTBUILD_S=\"$(KEXTBUILD)\"		\
 		-DBUNDLEID_S=\"$(BUNDLEID)\"		\
-		-DBUNDLEID=$(BUNDLEID)
+		-DBUNDLEID=$(BUNDLEID)			\
+		-D__TZ__=\"$(shell date +%z)\"
 
 #
 # C compiler flags
@@ -113,8 +107,8 @@ LDFLAGS+=	-nostdlib \
 		-Xlinker -export_dynamic
 
 # libraries
-#LIBS+=		-lkmodc++
 LIBS+=		-lkmod
+#LIBS+=		-lkmodc++
 LIBS+=		-lcc_kext
 
 # kextlibs flags
@@ -137,7 +131,7 @@ all: $(KEXTBUNDLE)
 $(OBJS): $(MKFS)
 
 $(KEXTMACHO): $(OBJS)
-	$(CC) $(LDFLAGS) -o $@ $(LIBS) $^
+	$(CC) $(SDKFLAGS) $(LDFLAGS) $(LIBS) -o $@ $^
 	otool -h $@
 	otool -l $@ | grep uuid
 
@@ -180,7 +174,7 @@ endif
 	dsymutil -arch $(ARCH) -o $(KEXTNAME).kext.dSYM $@/Contents/MacOS/$(KEXTNAME)
 
 # see: https://www.gnu.org/software/make/manual/html_node/Target_002dspecific.html
-# Those two flags must present at the same  o.w. debug symbol cannot be generated
+# Those two flags must present at the same time  o.w. debug symbol cannot be generated
 dbg: CPPFLAGS += -DDEBUG -g
 dbg: $(KEXTBUNDLE)
 
@@ -201,7 +195,7 @@ unload:
 
 install: $(KEXTBUNDLE) uninstall
 	test -d "$(PREFIX)"
-	sudo cp -pr $< "$(PREFIX)/$<"
+	sudo cp -r $< "$(PREFIX)/$<"
 	sudo chown -R root:wheel "$(PREFIX)/$<"
 
 uninstall:
