@@ -40,7 +40,7 @@ kern_return_t emptyfs_start(kmod_info_t *ki, void *d __unused)
     kern_return_t e;
     uuid_string_t uuid;
 
-    LOG("built with clang %s", __clang_version__);
+    LOG("built with Apple LLVM version %s", __clang_version__);
 
     e = util_vma_uuid(ki->address, uuid);
     kassert(e == 0);

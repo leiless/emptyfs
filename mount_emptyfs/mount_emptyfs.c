@@ -49,10 +49,10 @@ static __dead2 void version(char * __nonnull argv0)
     fprintf(stderr,
             "%s version %s\n"
             "built date %s %s\n"
-            "built with c++ inc %s\n\n",
+            "built with Apple LLVM version %s\n\n",
             basename(argv0), MOUNT_EMPTYFS_VERSION,
             __DATE__, __TIME__,
-            __VERSION__);
+            __clang_version__);
     exit(0);
 }
 
