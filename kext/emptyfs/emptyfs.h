@@ -11,7 +11,7 @@
 #ifndef __kext_makefile__
 #define __TZ__          "+0000"
 #define BUNDLEID_S      "cn.junkman.kext.emptyfs"
-#define KEXTVERSION_S   "0000.00.01"
+#define KEXTVERSION_S   "0000.00.04"
 #define KEXTBUILD_S     "1"
 #endif
 
