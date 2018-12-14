@@ -349,7 +349,7 @@ static int uiomove_atomic(
 
     if (unlikely(size > INT_MAX)) {
         e = ERANGE;
-    } else if (unlikely(size > uio_resid(uio))) {
+    } else if (unlikely(size > (user_size_t) uio_resid(uio))) {
         e = ENOBUFS;
     } else {
         e = uiomove(addr, (int) size, uio);
