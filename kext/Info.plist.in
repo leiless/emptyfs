@@ -4,6 +4,8 @@
 <dict>
 	<key>BuildMachineOSBuild</key>
 	<string>__OSBUILD__</string>
+	<key>BuildMachineClangVersion</key>
+	<string>__CLANGVER__</string>
 	<key>CFBundleExecutable</key>
 	<string>__KEXTMACHO__</string>
 	<key>CFBundleIdentifier</key>

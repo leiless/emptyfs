@@ -143,6 +143,7 @@ Info.plist~: Info.plist.in
 		-e 's/__KEXTBUILD__/$(KEXTBUILD)/g' \
 		-e 's/__BUNDLEID__/$(BUNDLEID)/g' \
 		-e 's/__OSBUILD__/$(shell /usr/bin/sw_vers -buildVersion)/g' \
+		-e 's/__CLANGVER__/$(shell $(CC) -v 2>&1 | grep version)/g' \
 	$^ > $@
 
 $(KEXTBUNDLE): $(KEXTMACHO) Info.plist~
