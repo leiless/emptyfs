@@ -112,7 +112,7 @@ LIBS+=		-lkmod
 LIBS+=		-lcc_kext
 
 # kextlibs flags
-KLFLAGS+=	-c -unsupported
+KLFLAGS+=	-xml -c -unsupported
 
 # source, header, object and make files
 SRCS:=		$(wildcard $(KEXTNAME)/*.c)
@@ -152,9 +152,7 @@ $(KEXTBUNDLE): $(KEXTMACHO) Info.plist~
 
 	# Clear placeholders(o.w. kextlibs cannot parse)
 	sed 's/__KEXTLIBS__//g' Info.plist~ > $@/Contents/Info.plist
-
-	awk '/__KEXTLIBS__/{system("kextlibs -xml $(KLFLAGS) $@");next};1' Info.plist~ > $@/Contents/Info.plist~
-
+	awk '/__KEXTLIBS__/{system("kextlibs $(KLFLAGS) $@");next};1' Info.plist~ > $@/Contents/Info.plist~
 	mv $@/Contents/Info.plist~ $@/Contents/Info.plist
 
 ifdef COPYRIGHT
