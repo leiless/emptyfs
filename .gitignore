@@ -9,4 +9,5 @@
 *.xcodeproj/
 *.xcworkspace/
 DerivedData/
+bin/
 
