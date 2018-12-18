@@ -25,8 +25,10 @@ int (**emptyfs_vnop_p)(void *);
  *  it merely return ENOTSUP  like what we do
  *  the KPI resides in com.apple.kpi.bsd
  */
-static inline int emptyfs_vnop_default(struct vnop_generic_args *arg __unused)
+static inline int emptyfs_vnop_default(struct vnop_generic_args *arg)
 {
+    kassert_nonnull(arg);
+    LOG_TRA("desc: %p", arg->a_desc);
     return ENOTSUP;
 }
 
