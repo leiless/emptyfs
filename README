@@ -3,7 +3,8 @@ macOS VFS kernel extension for emptyfs
 Build:
 make
 
-make dbg # Debug build
+make            # Debug build(default)
+make release    # Release build
 
-TODO
+*TODO*
 

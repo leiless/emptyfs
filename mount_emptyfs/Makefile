@@ -3,7 +3,7 @@
 #
 
 CC=gcc
-CFLAGS=-std=c99 -Wall -Wextra -DDEBUG
+CFLAGS=-std=c99 -Wall -Wextra -g -DDEBUG
 SOURCES=$(wildcard *.c)
 EXECUTABLE=mount_emptyfs
 RM=rm -f

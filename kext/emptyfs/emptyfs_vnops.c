@@ -444,7 +444,7 @@ static int emptyfs_vnop_readdir(struct vnop_readdir_args *ap)
         strlcpy(di.d_name, ".", sizeof(di.d_name));
         e = uiomove_atomic(&di, sizeof(di), uio);
         if (e) {
-            LOG_ERR("uiomove_atomic() fail  errno: %d", e);
+            LOG_ERR("uiomove_atomic() fail #1  errno: %d", e);
         } else {
             num++;
             index++;
@@ -456,7 +456,7 @@ static int emptyfs_vnop_readdir(struct vnop_readdir_args *ap)
         strlcpy(di.d_name, "..", sizeof(di.d_name));
         e = uiomove_atomic(&di, sizeof(di), uio);
         if (e) {
-            LOG_ERR("uiomove_atomic() fail  errno: %d", e);
+            LOG_ERR("uiomove_atomic() fail #2  errno: %d", e);
         } else {
             num++;
             index++;

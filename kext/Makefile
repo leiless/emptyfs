@@ -116,7 +116,7 @@ MKFS:=		$(wildcard Makefile)
 
 # targets
 
-all: $(KEXTBUNDLE)
+all: debug
 
 %.o: %.c $(HDRS)
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c -o $@ $<
@@ -167,8 +167,10 @@ endif
 
 # see: https://www.gnu.org/software/make/manual/html_node/Target_002dspecific.html
 # Those two flags must present at the same time  o.w. debug symbol cannot be generated
-dbg: CPPFLAGS += -DDEBUG -g
-dbg: $(KEXTBUNDLE)
+debug: CPPFLAGS += -g -DDEBUG
+debug: $(KEXTBUNDLE)
+
+release: $(KEXTBUNDLE)
 
 load: $(KEXTBUNDLE)
 	sudo chown -R root:wheel $<
