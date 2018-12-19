@@ -12,19 +12,12 @@ $(error KEXTNAME not defined)
 endif
 
 ifndef KEXTVERSION
-ifdef KEXTBUILD
-KEXTVERSION:=	$(KEXTBUILD)
-else
 $(error KEXTVERSION not defined)
-endif
 endif
 
 ifndef KEXTBUILD
-ifdef KEXTVERSION
-KEXTBUILD:=	$(KEXTVERSION)
-else
-$(error KEXTBUILD not defined)
-endif
+# [assume] zero indicates no build number
+KEXTBUILD:=	0
 endif
 
 ifndef BUNDLEDOMAIN

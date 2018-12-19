@@ -16,14 +16,14 @@
 	<string>__KEXTNAME__</string>
 	<key>CFBundlePackageType</key>
 	<string>KEXT</string>
-	<key>CFBundleShortVersionString</key>
+	<key>CFBundleVersion</key>
 	<string>__KEXTVERSION__</string>
+	<key>CFBundleShortVersionString</key>
+	<string>__KEXTBUILD__</string>
 	<key>CFBundleSupportedPlatforms</key>
 	<array>
 		<string>MacOSX</string>
 	</array>
-	<key>CFBundleVersion</key>
-	<string>__KEXTBUILD__</string>
 __KEXTLIBS__
 </dict>
 </plist>
