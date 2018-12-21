@@ -2,10 +2,12 @@
  * Created 181117  lynnl
  */
 
-#include "emptyfs_vnops.h"
-#include "emptyfs_vfsops.h"
 #include <sys/fcntl.h>
 #include <sys/dirent.h>
+#include <string.h>
+
+#include "emptyfs_vnops.h"
+#include "emptyfs_vfsops.h"
 
 /*
  * this variable will be set when we register VFS plugin via vfs_fsadd()

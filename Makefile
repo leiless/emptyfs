@@ -10,9 +10,9 @@ OUT=bin
 
 all:
 	$(RM) -rf $(OUT)/emptyfs.kext* $(OUT)/mount_emptyfs
-	$(MKDIR) -p $(OUT)
 	$(MAKE) -C kext
 	$(MAKE) -C mount_emptyfs
+	$(MKDIR) -p $(OUT)
 	$(MV) kext/emptyfs.kext kext/emptyfs.kext.dSYM $(OUT)
 	$(MV) mount_emptyfs/mount_emptyfs $(OUT)
 

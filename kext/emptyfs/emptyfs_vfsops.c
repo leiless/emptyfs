@@ -7,6 +7,7 @@
 #include <sys/mount.h>
 #include <sys/kauth.h>
 #include <sys/proc.h>
+#include <string.h>
 
 #include "emptyfs_vfsops.h"
 #include "emptyfs_vnops.h"
