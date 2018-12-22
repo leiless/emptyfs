@@ -121,6 +121,11 @@ static void assert_valid_vnode(vnode_t vp)
  * @cnp     describes the name to search for  more see <sys/vnode.h>
  * @ctx     identity of the calling process
  * @return  0 if found  errno o.w.
+ *
+ * see:
+ *  search 'macos dot underscore files'
+ *  https://www.dropboxforum.com/t5/Syncing-and-uploads/What-can-we-do-with-files/td-p/186881
+ *  https://apple.stackexchange.com/questions/14980/why-are-dot-underscore-files-created-and-how-can-i-avoid-them
  */
 static int emptyfs_vnop_lookup(struct vnop_lookup_args *ap)
 {
@@ -198,6 +203,8 @@ static int emptyfs_vnop_lookup(struct vnop_lookup_args *ap)
  * this entry is rarely useful :. VFS can read a file vnode without ever open it
  * .: any work that you'd usually do here you have to do lazily in your
  *  read/write entry points
+ *
+ * see: man open(2)
  */
 static int emptyfs_vnop_open(struct vnop_open_args *ap)
 {
@@ -215,7 +222,8 @@ static int emptyfs_vnop_open(struct vnop_open_args *ap)
     kassert(vnode_isdir(vp));
     assert_valid_vnode(vp);
     /* NOTE: there seems too many open flags */
-    kassert_known_flags(mode, O_EVTONLY | O_NONBLOCK | O_APPEND | FREAD | FWRITE);
+    kassert_known_flags(mode, O_CLOEXEC | O_DIRECTORY | O_EVTONLY |
+                                O_NONBLOCK | O_APPEND | FREAD | FWRITE);
     kassert_nonnull(ctx);
 
     LOG_TRA("desc: %p vp: %p %#x mode: %#x", desc, vp, vnode_vid(vp), mode);
@@ -364,6 +372,11 @@ static int uiomove_atomic(
         e = uiomove(addr, (int) size, uio);
     }
 
+    if (e) {
+        LOG_ERR("uiomove_atomic() fail  size: %zu resid: %lld errno: %d",
+                    size, uio_resid(uio), e);
+    }
+
     return e;
 }
 
@@ -450,9 +463,7 @@ static int emptyfs_vnop_readdir(struct vnop_readdir_args *ap)
         di.d_namlen = (uint8_t) strlen(".");
         strlcpy(di.d_name, ".", sizeof(di.d_name));
         e = uiomove_atomic(&di, sizeof(di), uio);
-        if (e) {
-            LOG_ERR("uiomove_atomic() fail #1  errno: %d", e);
-        } else {
+        if (e == 0) {
             num++;
             index++;
         }
@@ -462,9 +473,7 @@ static int emptyfs_vnop_readdir(struct vnop_readdir_args *ap)
         di.d_namlen = (uint8_t) strlen("..");
         strlcpy(di.d_name, "..", sizeof(di.d_name));
         e = uiomove_atomic(&di, sizeof(di), uio);
-        if (e) {
-            LOG_ERR("uiomove_atomic() fail #2  errno: %d", e);
-        } else {
+        if (e == 0) {
             num++;
             index++;
         }

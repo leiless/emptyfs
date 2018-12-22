@@ -111,7 +111,7 @@
 #define LOG_OFF(fmt, ...)       (void) ((void) 0, ##__VA_ARGS__)
 #ifdef DEBUG
 #define LOG_DBG(fmt, ...)       LOG("[DBG] " fmt, ##__VA_ARGS__)
-#define LOG_TRA(fmt, ...)       LOG("[TRA %s] " fmt, __func__, ##__VA_ARGS__)
+#define LOG_TRA(fmt, ...)       LOG("[TRA %s#L%d] " fmt, __func__, __LINE__, ##__VA_ARGS__)
 #else
 #define LOG_DBG(fmt, ...)       LOG_OFF(fmt, ##__VA_ARGS__)
 #define LOG_TRA(fmt, ...)       LOG_OFF(fmt, ##__VA_ARGS__)
@@ -129,8 +129,8 @@
     uint64_t __b = (known);                                                 \
     uint64_t __c = __a & ~__b;                                              \
     if (__c) {                                                              \
-        LOG_WAR("Met unknown flags %#llx  (%#llx vs %#llx)\n%s@%s#L%d",     \
-            __c, __a, __b, __BASE_FILE__, __FUNCTION__, __LINE__);          \
+        LOG("[WAR %s#L%d] Met unknown flags %#llx (%#llx vs %#llx)",        \
+                __func__, __LINE__, __c, __a, __b);                         \
     }                                                                       \
 } while (0)
 #else
