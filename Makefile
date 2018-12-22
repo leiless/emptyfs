@@ -9,7 +9,7 @@ MKDIR=mkdir
 OUT=bin
 
 all:
-	$(RM) -rf $(OUT)/emptyfs.kext* $(OUT)/mount_emptyfs
+	$(RM) -rf $(OUT)/emptyfs.kext* $(OUT)/mount_emptyfs*
 	$(MAKE) -C kext
 	$(MAKE) -C mount_emptyfs
 	$(MKDIR) -p $(OUT)
