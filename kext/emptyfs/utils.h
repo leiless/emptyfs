@@ -22,6 +22,9 @@
  * __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ is a compiler-predefined macro
  */
 #define OS_VER_MIN_REQ      __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__
+#ifndef __MAC_10_12
+#define __MAC_10_12         101200
+#endif
 
 /*
  * Used to indicate unused function parameters
