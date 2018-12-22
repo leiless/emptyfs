@@ -239,7 +239,7 @@ static int emptyfs_vfsop_mount(
     kassert_nonnull(udata);     /* Q: what if user passed NULL mount(3) arg. */
     kassert_nonnull(ctx);
 
-    LOG_TRA("mp: %p devvp: %p(%d) %#x data: %#llx",
+    LOG_DBG("mp: %p devvp: %p(%d) %#x data: %#llx",
             mp, devvp, vnode_vtype(devvp), vnode_vid(devvp), udata);
 
     /*
@@ -376,7 +376,7 @@ static int emptyfs_vfsop_start(
     kassert_known_flags(flags, 0);
     kassert_nonnull(ctx);
 
-    LOG_TRA("mp: %p flags: %#x", mp, flags);
+    LOG_DBG("mp: %p flags: %#x", mp, flags);
 
     return 0;
 }
@@ -401,7 +401,7 @@ static int emptyfs_vfsop_unmount(
     kassert_known_flags(flags, MNT_FORCE);
     kassert_nonnull(ctx);
 
-    LOG_TRA("mp: %p flags: %#x", mp, flags);
+    LOG_DBG("mp: %p flags: %#x", mp, flags);
 
     flush_flags = (flags & MNT_FORCE) ? FORCECLOSE : 0;
 
@@ -570,7 +570,7 @@ static int emptyfs_vfsop_root(
     kassert_nonnull(vpp);
     kassert_nonnull(ctx);
 
-    LOG_TRA("mp: %p vpp: %p %p", mp, vpp, *vpp);
+    LOG_DBG("mp: %p vpp: %p %p", mp, vpp, *vpp);
 
     mntp = emptyfs_mount_from_mp(mp);
     e = get_root_vnode(mntp, &vn);
@@ -583,7 +583,7 @@ static int emptyfs_vfsop_root(
         kassert_null(*vpp);
     }
 
-    LOG_TRA("vpp: %p %p", vpp, *vpp);
+    LOG_DBG("vpp: %p %p", vpp, *vpp);
 
     return e;
 }
@@ -609,7 +609,7 @@ static int emptyfs_vfsop_getattr(
     kassert_nonnull(attr);
     kassert_nonnull(ctx);
 
-    LOG_TRA("mp: %p attr: %p f_active: %#llx f_supported: %#llx",
+    LOG_DBG("mp: %p attr: %p f_active: %#llx f_supported: %#llx",
                 mp, attr, attr->f_active, attr->f_supported);
 
     mntp = emptyfs_mount_from_mp(mp);
@@ -658,7 +658,7 @@ static int emptyfs_vfsop_getattr(
     /* no support f_quota */
     /* no support f_reserved */
 
-    LOG_TRA("f_active: %#llx f_supported: %#llx",
+    LOG_DBG("f_active: %#llx f_supported: %#llx",
             attr->f_active, attr->f_supported);
 
     return 0;

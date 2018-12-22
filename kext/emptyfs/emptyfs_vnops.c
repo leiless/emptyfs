@@ -35,7 +35,7 @@ int (**emptyfs_vnop_p)(void *);
 static inline int emptyfs_vnop_default(struct vnop_generic_args *arg)
 {
     kassert_nonnull(arg);
-    LOG_TRA("desc: %p", arg->a_desc);
+    LOG_DBG("desc: %p", arg->a_desc);
     return ENOTSUP;
 }
 
@@ -151,7 +151,7 @@ static int emptyfs_vnop_lookup(struct vnop_lookup_args *ap)
     kassert_nonnull(cnp);
     kassert_nonnull(ctx);
 
-    LOG_TRA("desc: %p dvp: %p %#x vpp: %p %p cnp: %u %#x %s %s",
+    LOG_DBG("desc: %p dvp: %p %#x vpp: %p %p cnp: %u %#x %s %s",
             desc, dvp, vnode_vid(dvp), vpp, *vpp,
             cnp->cn_nameiop, cnp->cn_flags, cnp->cn_pnbuf, cnp->cn_nameptr);
 
@@ -226,7 +226,7 @@ static int emptyfs_vnop_open(struct vnop_open_args *ap)
                                 O_NONBLOCK | O_APPEND | FREAD | FWRITE);
     kassert_nonnull(ctx);
 
-    LOG_TRA("desc: %p vp: %p %#x mode: %#x", desc, vp, vnode_vid(vp), mode);
+    LOG_DBG("desc: %p vp: %p %#x mode: %#x", desc, vp, vnode_vid(vp), mode);
 
     /* Empty implementation */
 
@@ -261,7 +261,7 @@ static int emptyfs_vnop_close(struct vnop_close_args *ap)
     kassert_known_flags(fflag, O_EVTONLY | O_NONBLOCK | O_APPEND | FREAD | FWRITE);
     kassert_nonnull(ctx);
 
-    LOG_TRA("desc: %p vp: %p %#x fflag: %#x", desc, vp, vnode_vid(vp), fflag);
+    LOG_DBG("desc: %p vp: %p %#x fflag: %#x", desc, vp, vnode_vid(vp), fflag);
 
     /* Empty implementation */
 
@@ -305,7 +305,7 @@ static int emptyfs_vnop_getattr(struct vnop_getattr_args *ap)
     kassert_nonnull(vap);
     kassert_nonnull(ctx);
 
-    LOG_TRA("desc: %p vp: %p %#x va_active: %#llx va_supported: %#llx",
+    LOG_DBG("desc: %p vp: %p %#x va_active: %#llx va_supported: %#llx",
             desc, vp, vnode_vid(vp), vap->va_active, vap->va_supported);
 
     mntp = emptyfs_mount_from_mp(vnode_mount(vp));
@@ -341,7 +341,7 @@ static int emptyfs_vnop_getattr(struct vnop_getattr_args *ap)
     VATTR_RETURN(vap, va_name, XXX);
 #endif
 
-    LOG_TRA("va_active: %#llx va_supported: %#llx",
+    LOG_DBG("va_active: %#llx va_supported: %#llx",
             vap->va_active, vap->va_supported);
 
     return 0;
@@ -435,7 +435,7 @@ static int emptyfs_vnop_readdir(struct vnop_readdir_args *ap)
     /* eofflag and numdirent can be NULL */
     kassert_nonnull(ctx);
 
-    LOG_TRA("desc: %p vp: %p %#x flags: %#x uio: "
+    LOG_DBG("desc: %p vp: %p %#x flags: %#x uio: "
             "(isuserspace: %d resid: %lld "
             "iovcnt: %d offset: %lld "
             "curriovbase: %llu curriovlen: %llu)",
@@ -501,7 +501,7 @@ static int emptyfs_vnop_readdir(struct vnop_readdir_args *ap)
     if (eofflag != NULL)    *eofflag = eof;
     if (numdirent != NULL)  *numdirent = num;
 
-    LOG_TRA("eofflag: %p %d numdirent: %p %d", eofflag, eof, numdirent, num);
+    LOG_DBG("eofflag: %p %d numdirent: %p %d", eofflag, eof, numdirent, num);
 
 out_exit:
     return e;
@@ -574,7 +574,7 @@ static int emptyfs_vnop_reclaim(struct vnop_reclaim_args *ap)
     assert_valid_vnode(vp);
     kassert_nonnull(ctx);
 
-    LOG_TRA("desc: %p vp: %p %#x", desc, vp, vnode_vid(vp));
+    LOG_DBG("desc: %p vp: %p %#x", desc, vp, vnode_vid(vp));
 
     /* do reclaim as if we have a fsnoe hash layer */
     mntp = emptyfs_mount_from_mp(vnode_mount(vp));
