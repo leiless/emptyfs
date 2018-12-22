@@ -12,6 +12,7 @@
 #include "emptyfs_vfsops.h"
 #include "emptyfs_vnops.h"
 #include "emptyfs.h"
+#include "utils.h"
 
 static int emptyfs_vfsop_mount(struct mount *, vnode_t, user_addr_t, vfs_context_t);
 static int emptyfs_vfsop_start(struct mount *, int, vfs_context_t);
@@ -69,7 +70,15 @@ static void emptyfs_init_volattrs(struct emptyfs_mount * __nonnull mntp)
         | VOL_CAP_FMT_CASE_PRESERVING
         | VOL_CAP_FMT_FAST_STATFS
         | VOL_CAP_FMT_2TB_FILESIZE
-        | VOL_CAP_FMT_NO_PERMISSIONS;
+#if defined(OS_VER_MIN_REQ) && OS_VER_MIN_REQ >= __MAC_10_12
+        | VOL_CAP_FMT_NO_PERMISSIONS
+#elif defined(OS_VER_MIN_REQ)
+#warning Some volume capabilities may unavailable under macOS target <= 10.12
+#else
+#warning OS_VER_MIN_REQ undefined
+#endif
+        ;
+
     /* XXX: forcibly mark all capabilities as valid? */
     cap->valid[VOL_CAPABILITIES_FORMAT] = (__typeof(*(cap->valid))) -1;
 

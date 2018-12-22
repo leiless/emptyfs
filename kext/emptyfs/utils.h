@@ -7,6 +7,7 @@
 #ifndef __EMPTYFS_UTILS_H
 #define __EMPTYFS_UTILS_H
 
+#include <Availability.h>
 #include <sys/types.h>
 #include <mach/vm_types.h>
 #include <sys/malloc.h>
@@ -16,6 +17,11 @@
 #ifndef __kext_makefile__
 #define KEXTNAME_S "emptyfs"
 #endif
+
+/*
+ * __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ is a compiler-predefined macro
+ */
+#define OS_VER_MIN_REQ      __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__
 
 /*
  * Used to indicate unused function parameters

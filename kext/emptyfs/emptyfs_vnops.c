@@ -2,6 +2,11 @@
  * Created 181117  lynnl
  */
 
+/*
+ * user*_addr_t definition used in <sys/fcntl.h>
+ *  o.w. os <= 10.11(El Capitan) may unable to compile
+ */
+#include <i386/types.h>
 #include <sys/fcntl.h>
 #include <sys/dirent.h>
 #include <string.h>
