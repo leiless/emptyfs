@@ -110,7 +110,7 @@
 #define LOG_BUG(fmt, ...)       LOG("[BUG] " fmt, ##__VA_ARGS__)
 #define LOG_OFF(fmt, ...)       (void) ((void) 0, ##__VA_ARGS__)
 #ifdef DEBUG
-#define LOG_DBG(fmt, ...)       LOG("[DBG] " fmt, ##__VA_ARGS__)
+#define LOG_DBG(fmt, ...)       LOG("[DBG %s#L%d] " fmt, __func__, __LINE__, ##__VA_ARGS__)
 #define LOG_TRA(fmt, ...)       LOG("[TRA %s#L%d] " fmt, __func__, __LINE__, ##__VA_ARGS__)
 #else
 #define LOG_DBG(fmt, ...)       LOG_OFF(fmt, ##__VA_ARGS__)

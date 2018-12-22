@@ -416,6 +416,9 @@ static int emptyfs_vnop_readdir(struct vnop_readdir_args *ap)
     struct dirent di;
     off_t index;
 
+    static int known_flags = VNODE_READDIR_EXTENDED | VNODE_READDIR_REQSEEKOFF |
+                                VNODE_READDIR_SEEKOFF32 | VNODE_READDIR_NAMEMAX;
+
     kassert_nonnull(ap);
     desc = ap->a_desc;
     vp = ap->a_vp;
@@ -428,9 +431,7 @@ static int emptyfs_vnop_readdir(struct vnop_readdir_args *ap)
     kassert(vnode_isdir(vp));
     assert_valid_vnode(vp);
     kassert_nonnull(uio);
-    kassert_known_flags(flags,
-        VNODE_READDIR_EXTENDED | VNODE_READDIR_REQSEEKOFF |
-        VNODE_READDIR_SEEKOFF32 | VNODE_READDIR_NAMEMAX);
+    kassert_known_flags(flags, known_flags);
     /* eofflag and numdirent can be NULL */
     kassert_nonnull(ctx);
 
@@ -445,10 +446,11 @@ static int emptyfs_vnop_readdir(struct vnop_readdir_args *ap)
 
     /* Trivial implementation */
 
-    if (flags & (VNODE_READDIR_EXTENDED | VNODE_READDIR_REQSEEKOFF |
-                VNODE_READDIR_SEEKOFF32 | VNODE_READDIR_NAMEMAX)) {
+    if (flags & known_flags) {
         /* only make sense if backing file system is NFS exported */
         e = EINVAL;
+        LOG_DBG("Met NFS-exported readdir flags %#x?  errno: %d",
+                    flags & known_flags, e);
         goto out_exit;
     }
 
