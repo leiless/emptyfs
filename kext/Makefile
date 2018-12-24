@@ -165,12 +165,12 @@ endif
 
 	dsymutil -arch $(ARCH) -o $(KEXTNAME).kext.dSYM $@/Contents/MacOS/$(KEXTNAME)
 
+release: $(KEXTBUNDLE)
+
 # see: https://www.gnu.org/software/make/manual/html_node/Target_002dspecific.html
 # Those two flags must present at the same time  o.w. debug symbol cannot be generated
 debug: CPPFLAGS += -g -DDEBUG
-debug: $(KEXTBUNDLE)
-
-release: $(KEXTBUNDLE)
+debug: release
 
 load: $(KEXTBUNDLE)
 	sudo chown -R root:wheel $<
@@ -200,5 +200,5 @@ uninstall:
 clean:
 	rm -rf $(KEXTBUNDLE) $(KEXTBUNDLE).dSYM Info.plist~ $(OBJS) $(KEXTMACHO)
 
-.PHONY: all load stat unload intall uninstall clean
+.PHONY: all debug release load stat unload intall uninstall clean
 

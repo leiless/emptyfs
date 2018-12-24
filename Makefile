@@ -27,5 +27,5 @@ clean:
 	$(MAKE) -C kext clean
 	$(MAKE) -C mount_emptyfs clean
 
-.PHONY: all clean
+.PHONY: all debug release clean
 

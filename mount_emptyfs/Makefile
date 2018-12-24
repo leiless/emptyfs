@@ -21,5 +21,5 @@ $(EXECUTABLE): $(SOURCES)
 clean:
 	$(RM) *.o $(EXECUTABLE)
 
-.PHONY: all clean
+.PHONY: all debug release clean
 
