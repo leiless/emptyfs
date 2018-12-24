@@ -20,7 +20,7 @@
 #ifdef DEBUG
 #define LOG_DBG(fmt, ...)   LOG("[DBG] " fmt, ##__VA_ARGS__)
 #else
-#define LOG_DBG(fmt, ...)   ((void) 0, ##__VA_ARGS__)
+#define LOG_DBG(fmt, ...)   (void) (0, ##__VA_ARGS__)
 #endif
 #define LOG_ERR(fmt, ...)   LOG("[ERR] " fmt, ##__VA_ARGS__)
 
