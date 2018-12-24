@@ -1,4 +1,4 @@
-## `emptyfs`: macOS VFS plug-in
+## `emptyfs` - A trivial macOS VFS plug-in implementation
 
 ### Summary
 
