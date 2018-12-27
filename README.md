@@ -40,6 +40,8 @@ $ make uninstall		# In case you want to uninstall
 
 You can specify `PREFIX` variable to make for install location, the default is `/Library/Extensions`
 
+**TODO:** add docs about HOWTO load at boot-up time
+
 After installation, the kext will be loaded automatically in each boot.
 
 ### Use of `emptyfs`
@@ -61,29 +63,32 @@ Then attach the disk image with `-nomount` flag(.: the system won't automaticall
 # The first two volumes are image scheme and map partition
 #  We cares about the last one(i.e. EMPTYFS)
 $ hdiutil attach -nomount test.dmg
-/dev/disk3          	Apple_partition_scheme
-/dev/disk3s1        	Apple_partition_map
-/dev/disk3s2        	EMPTYFS
+/dev/disk2          	Apple_partition_scheme
+/dev/disk2s1        	Apple_partition_map
+/dev/disk2s2        	EMPTYFS
 ```
 
 After you load emptyfs kext, you can create a mount point and mount the file system:
 
 ```shell
+$ sudo kextload emptyfs.kext
 $ mkdir emptyfs_mp
-$ mount_emptyfs /dev/disk3s2 emptyfs_mp
+$ ./mount_emptyfs /dev/disk2s2 emptyfs_mp
 ```
 
 Use [mount(8)](x-man-page://8/mount) to check mount info and explore  the file system:
 
 ```shell
 $ mount | grep emptyfs
-**TODO**
+/dev/disk2s2 on /Users/lynnl/emptyfs_mp (emptyfs, local, nodev, noexec, nosuid, read-only, noowners, mounted by lynnl)
 
 $ ls -la emptyfs_mp
-**TODO**
+total 8
+dr-xr-xr-x   2 lynnl  staff  528 Dec 27 22:00 .
+drwxr-xr-x+ 19 lynnl  staff  608 Dec 27 21:59 ..
 
 $ stat emptyfs_mp
-**TODO**
+16777226 2 dr-xr-xr-x 2 lynnl staff 0 528 "Dec 27 22:00:25 2018" "Dec 27 22:00:25 2018" "Dec 27 22:00:25 2018" "Dec 27 22:00:25 2018" 4096 8 0 emptyfs_mp
 ```
 
 When you explore the file system thoroughly, you can first [umount(8)](x-man-page://8/umount) the file system and then unload the kext:
