@@ -17,6 +17,8 @@ $ make release    # Release build
 
 Theoretically, this kext can be compile and run in macOS 10.4+, yet currently only from 10.10 up to 10.14 are tested.
 
+If you compile in macOS >= 10.13 and wants the kext to stay compatible with macOS <= 10.12, you should specify `-DKASAN` or `-D_FORTIFY_SOURCE=0` to `CPPFLAGS`, for more info, please refer to [issues#1](https://github.com/lynnlx/emptyfs/issues/1)
+
 ### Debugging
 
 ```
@@ -42,7 +44,54 @@ After installation, the kext will be loaded automatically in each boot.
 
 ### Use of `emptyfs`
 
+To test the VFS plug-in, you must specify what device node to mounted on. Simplest approach is to create a disk image:
+
+```shell
+# Create a disk image (name: test.dmg size: 1MB type: EMPTYFS)
+$ hdiutil create -size 1m -partitionType EMPTYFS test
+created: /Users/lynnl/test.dmg
+
+$ file test.dmg
+test.dmg: Apple Driver Map, blocksize 512, blockcount 2048, devtype 0, devid 0, driver count 0, contains[@0x200]: Apple Partition Map, map block count 2, start block 1, block count 63, name Apple, type Apple_partition_map, valid, allocated, contains[@0x400]: Apple Partition Map, map block count 2, start block 64, block count 1984, name disk image, type EMPTYFS, valid, allocated, readable, writable, mount at startup
+```
+
+Then attach the disk image with `-nomount` flag(.: the system won't automatically mount the volumes on the image):
+
+```shell
+# The first two volumes are image scheme and map partition
+#  We cares about the last one(i.e. EMPTYFS)
+$ hdiutil attach -nomount test.dmg
+/dev/disk3          	Apple_partition_scheme
+/dev/disk3s1        	Apple_partition_map
+/dev/disk3s2        	EMPTYFS
+```
+
+After you load emptyfs kext, you can create a mount point and mount the file system:
+
+```shell
+$ mkdir emptyfs_mp
+$ mount_emptyfs /dev/disk3s2 emptyfs_mp
+```
+
+Use [mount(8)](x-man-page://8/mount) to check mount info and explore  the file system:
+
+```shell
+$ mount | grep emptyfs
 **TODO**
+
+$ ls -la emptyfs_mp
+**TODO**
+
+$ stat emptyfs_mp
+**TODO**
+```
+
+When you explore the file system thoroughly, you can first [umount(8)](x-man-page://8/umount) the file system and then unload the kext:
+
+```shell
+$ unmount emptyfs_mp
+$ sudo kextunload emptyfs.kext
+```
 
 ---
 
