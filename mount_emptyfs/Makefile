@@ -6,7 +6,7 @@ CC=gcc
 CFLAGS=-std=c99 -Wall -Wextra
 SOURCES=$(wildcard *.c)
 EXECUTABLE=mount_emptyfs
-RM=rm -f
+RM=rm
 
 all: debug
 
@@ -19,7 +19,7 @@ $(EXECUTABLE): $(SOURCES)
 	$(CC) $(CFLAGS) $< -o $@
 
 clean:
-	$(RM) *.o $(EXECUTABLE)
+	$(RM) -rf *.o $(EXECUTABLE) *.dSYM
 
 .PHONY: all debug release clean
 
