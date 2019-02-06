@@ -29,11 +29,16 @@ endif
 BUNDLEID?=	$(BUNDLEDOMAIN).kext.$(KEXTNAME)
 KEXTBUNDLE?=	$(KEXTNAME).kext
 KEXTMACHO?=	$(KEXTNAME).out
-ARCH?=		x86_64
-#ARCH?=		i386
+ARCHFLAGS?=	-arch x86_64
+#ARCHFLAGS?=	-arch x86_64 -arch i386
 PREFIX?=	/Library/Extensions
 
-# Set default XCode SDK
+#
+# Set default macOS SDK
+# You may use
+#  sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+# to switch to Xcode from Command Line Tools if cannot find any SDK
+#
 SDKROOT?=	$(shell xcrun --sdk macosx --show-sdk-path)
 
 SDKFLAGS=	-isysroot $(SDKROOT)
@@ -44,7 +49,7 @@ CODESIGN=	$(shell xcrun -find -sdk $(SDKROOT) codesign)
 #
 # Standard defines and includes for kernel extensions
 #
-# The __makefile__ macro used to compatible with XCode
+# The __kext_makefile__ macro used to compatible with XCode
 # Since XCode use intermediate objects  which causes symbol duplicated
 #
 CPPFLAGS+=	-DKERNEL \
@@ -52,7 +57,6 @@ CPPFLAGS+=	-DKERNEL \
 		-DDRIVER_PRIVATE \
 		-DAPPLE \
 		-DNeXT \
-		$(SDKFLAGS) \
 		-I$(SDKROOT)/System/Library/Frameworks/Kernel.framework/Headers \
 		-I$(SDKROOT)/System/Library/Frameworks/Kernel.framework/PrivateHeaders \
 		-D__kext_makefile__
@@ -65,8 +69,10 @@ CPPFLAGS+=	-DKEXTNAME_S=\"$(KEXTNAME)\"		\
 		-DKEXTVERSION_S=\"$(KEXTVERSION)\"	\
 		-DKEXTBUILD_S=\"$(KEXTBUILD)\"		\
 		-DBUNDLEID_S=\"$(BUNDLEID)\"		\
-		-DBUNDLEID=$(BUNDLEID)			\
-		-D__TZ__=\"$(shell date +%z)\"
+		-DBUNDLEID=$(BUNDLEID)
+
+TIME_STAMP:=	$(shell date +'%Y/%m/%d\ %H:%M:%S%z')
+CPPFLAGS+=	-D__TS__=\"$(TIME_STAMP)\"
 
 #
 # C compiler flags
@@ -76,8 +82,9 @@ CFLAGS+=	-mmacosx-version-min=$(MACOSX_VERSION_MIN)
 else
 CFLAGS+=	-mmacosx-version-min=10.4
 endif
-CFLAGS+=	-x c \
-		-arch $(ARCH) \
+CFLAGS+=	$(SDKFLAGS) \
+		$(ARCHFLAGS) \
+		-x c \
 		-std=c99 \
 		-nostdinc \
 		-fno-builtin \
@@ -85,7 +92,7 @@ CFLAGS+=	-x c \
 		-mkernel
 
 # warnings
-CFLAGS+=	-Wall -Wextra -Os
+CFLAGS+=	-Wall -Wextra
 
 # linker flags
 ifdef MACOSX_VERSION_MIN
@@ -93,8 +100,9 @@ LDFLAGS+=	-mmacosx-version-min=$(MACOSX_VERSION_MIN)
 else
 LDFLAGS+=	-mmacosx-version-min=10.4
 endif
-LDFLAGS+=	-arch $(ARCH)
-LDFLAGS+=	-nostdlib \
+LDFLAGS+=	$(SDKFLAGS) \
+		$(ARCHFLAGS) \
+		-nostdlib \
 		-Xlinker -kext \
 		-Xlinker -object_path_lto \
 		-Xlinker -export_dynamic
@@ -107,12 +115,9 @@ LIBS+=		-lcc_kext
 # kextlibs flags
 KLFLAGS+=	-xml -c -unsupported -undef-symbols
 
-# source, header, object and make files
-SRCS:=		$(wildcard $(KEXTNAME)/*.c)
-HDRS:=		$(wildcard $(KEXTNAME)/*.h)
+# source, object files
+SRCS:=		$(wildcard src/*.c)
 OBJS:=		$(SRCS:.c=.o)
-MKFS:=		$(wildcard Makefile)
-
 
 # targets
 
@@ -121,10 +126,8 @@ all: debug
 %.o: %.c $(HDRS)
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c -o $@ $<
 
-$(OBJS): $(MKFS)
-
 $(KEXTMACHO): $(OBJS)
-	$(CC) $(SDKFLAGS) $(LDFLAGS) $(LIBS) -o $@ $^
+	$(CC) $(LDFLAGS) $(LIBS) -o $@ $^
 	otool -h $@
 	otool -l $@ | grep uuid
 
@@ -148,6 +151,10 @@ $(KEXTBUNDLE): $(KEXTMACHO) Info.plist~
 	awk '/__KEXTLIBS__/{system("kextlibs $(KLFLAGS) $@");next};1' Info.plist~ > $@/Contents/Info.plist~
 	mv $@/Contents/Info.plist~ $@/Contents/Info.plist
 
+ifdef COMPATIBLE_VERSION
+	/usr/libexec/PlistBuddy -c 'Add :OSBundleCompatibleVersion string "$(COMPATIBLE_VERSION)"' $@/Contents/Info.plist
+endif
+
 ifdef COPYRIGHT
 	/usr/libexec/PlistBuddy -c 'Add :NSHumanReadableCopyright string "$(COPYRIGHT)"' $@/Contents/Info.plist
 endif
@@ -157,20 +164,23 @@ ifdef SIGNCERT
 	/usr/libexec/PlistBuddy -c 'Add :CFBundleSignature string ????' $@/Contents/Info.plist
 endif
 
-	# Empty-dependency kext cannot be load  so we add one manually
+	# Empty-dependency kext cannot be load  so we add one if necessary
 	/usr/libexec/PlistBuddy -c 'Print OSBundleLibraries' $@/Contents/Info.plist &> /dev/null || \
 		/usr/libexec/PlistBuddy -c 'Add :OSBundleLibraries:com.apple.kpi.bsd string "8.0b1"' $@/Contents/Info.plist
 
 	touch $@
 
-	dsymutil -arch $(ARCH) -o $(KEXTNAME).kext.dSYM $@/Contents/MacOS/$(KEXTNAME)
-
-release: $(KEXTBUNDLE)
+	dsymutil $(ARCHFLAGS) -o $(KEXTNAME).kext.dSYM $@/Contents/MacOS/$(KEXTNAME)
 
 # see: https://www.gnu.org/software/make/manual/html_node/Target_002dspecific.html
 # Those two flags must present at the same time  o.w. debug symbol cannot be generated
 debug: CPPFLAGS += -g -DDEBUG
-debug: release
+debug: CFLAGS += -O0
+debug: $(KEXTBUNDLE)
+
+# see: https://stackoverflow.com/questions/15548023/clang-optimization-levels
+release: CFLAGS += -O2
+release: $(KEXTBUNDLE)
 
 load: $(KEXTBUNDLE)
 	sudo chown -R root:wheel $<

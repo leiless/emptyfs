@@ -60,8 +60,8 @@ kern_return_t emptyfs_start(kmod_info_t *ki, void *d __unused)
     }
     LOG_DBG("%s file system registered", emptyfs_vfsentry.vfe_fsname);
 
-    LOG("loaded %s version %s build %s (%s %s)",
-        BUNDLEID_S, KEXTVERSION_S, KEXTBUILD_S, __TIMESTAMP__, __TZ__);
+    LOG("loaded %s version %s build %s (%s)",
+        BUNDLEID_S, KEXTVERSION_S, KEXTBUILD_S, __TS__);
 
 out_exit:
     return e;
@@ -89,8 +89,8 @@ kern_return_t emptyfs_stop(kmod_info_t *ki __unused, void *d __unused)
 
     util_massert();
 
-    LOG("unloaded %s version %s build %s (%s %s)",
-        BUNDLEID_S, KEXTVERSION_S, KEXTBUILD_S, __TIMESTAMP__, __TZ__);
+    LOG("unloaded %s version %s build %s (%s)",
+        BUNDLEID_S, KEXTVERSION_S, KEXTBUILD_S, __TS__);
 
 out_exit:
     return e;
